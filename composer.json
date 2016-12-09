@@ -1,0 +1,33 @@
+{
+    "name": "addons/elasticsearch",
+    "description": "Laravel's elasticsearch Paginator/Collection/Logger Helper.",
+    "homepage": "https://www.load-page.com",
+    "keywords": ["L5", "Laravel 5", "Laravel","elasticsearch","MonoLog", "Paginator", "Collection"],
+    "license": "MIT",
+    "support": {
+        "issues": "https://git.load-page.com/addons/elasticsearch/issues",
+        "source": "https://git.load-page.com/addons/elasticsearch"
+    },
+    "authors": [
+        {
+            "name": "Fly",
+            "email": "fly@load-page.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.10",
+        "elasticsearch/elasticsearch"
+    },
+    "autoload": {
+        "psr-4": {
+            "Addons\\Elasticsearch\\": "src/"
+        },
+        "classmap": [
+            "src/"
+        ],
+        "files": [
+        ]
+    },
+    "minimum-stability": "dev"
+    
+}
