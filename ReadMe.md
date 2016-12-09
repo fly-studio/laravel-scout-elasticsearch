@@ -25,19 +25,19 @@ Add the service provider and facade to `config/app.php`:
 ```php
 'providers' => [
     ...
-    Addons\LaravelElasticsearch\ServiceProvider::class,
+    Addons\Elasticsearch\ServiceProvider::class,
 ]
 
 'aliases' => [
     ...
-    'Elasticsearch' => Addons\LaravelElasticsearch\Facade::class,
+    'Elasticsearch' => Addons\Elasticsearch\Facade::class,
 ]
 ```
     
 Publish the configuration file:
 
 ```shell
-php artisan vendor:publish --provider="Addons\LaravelElasticsearch\ServiceProvider"
+php artisan vendor:publish --provider="Addons\Elasticsearch\ServiceProvider"
 ```
 
 ## Usage
