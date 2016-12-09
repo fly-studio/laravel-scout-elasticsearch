@@ -85,7 +85,7 @@ $elasticSearch = $this->app('elasticsearch');
 ## Copyright and License
 
 [elasticsearch](https://git.load-page.com/addons/elasticsearch)
-was written by [Colin Viebrock],[Fly Mirage](http://viebrock.ca) and is released under the 
+was written by [Colin Viebrock](http://viebrock.ca),[Fly Mirage](https://www.load-page.com/base/manual) and is released under the 
 [MIT License](LICENSE.md).
 
 Copyright (c) 2016
