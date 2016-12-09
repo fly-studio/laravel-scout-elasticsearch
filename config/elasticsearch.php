@@ -23,11 +23,18 @@ return [
              *
              * This is the only configuration value that is mandatory.
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#_host_configuration
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html#_host_configuration
              */
             'hosts' => [
                 'localhost:9200',
             ],
+            /**
+             * Index
+             * same as Scout's index
+             * eg: same as your database's name
+             * 
+             */
+            'index' => env('ELASTICSEARCH_INDEX', 'laravel'),
             /**
              * SSL
              *
@@ -41,7 +48,7 @@ return [
              * signed by a public certificate authority, then you can leave this null and
              * just use "https" in the host path(s) above and you should be fine.
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_security.html#_ssl_encryption_2
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_security.html#_ssl_encryption_2
              */
             'sslVerification' => null,
             /**
@@ -59,7 +66,7 @@ return [
              * Note: 'logObject' takes precedent over 'logPath'/'logLevel', so set
              * 'logObject' null if you just want file-based logging to a custom path.
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#enabling_logger
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html#enabling_logger
              */
             'logging' => false,
             // If you have an existing instance of Monolog you can use it here.
@@ -73,7 +80,7 @@ return [
              * your cluster. If you would like to disable retries, or change the number,
              * you can do so here.
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#_set_retries
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html#_set_retries
              */
             'retries' => null,
             /**
@@ -85,47 +92,47 @@ return [
             /**
              * Sniff On Start
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html
              */
             'sniffOnStart' => false,
             /**
              * HTTP Handler
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#_configure_the_http_handler
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html#_configure_the_http_handler
              * @see http://ringphp.readthedocs.org/en/latest/client_handlers.html
              */
             'httpHandler' => null,
             /**
              * Connection Pool
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#_setting_the_connection_pool
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_connection_pool.html
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html#_setting_the_connection_pool
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_connection_pool.html
              */
             'connectionPool' => null,
             /**
              * Connection Selector
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#_setting_the_connection_selector
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_selectors.html
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html#_setting_the_connection_selector
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_selectors.html
              */
             'connectionSelector' => null,
             /**
              * Serializer
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#_setting_the_serializer
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_serializers.html
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html#_setting_the_serializer
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_serializers.html
              */
             'serializer' => null,
             /**
              * Connection Factory
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#_setting_a_custom_connectionfactory
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html#_setting_a_custom_connectionfactory
              */
             'connectionFactory' => null,
             /**
              * Endpoint
              *
-             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/2.0/_configuration.html#_set_the_endpoint_closure
+             * @see https://www.elastic.co/guide/en/elasticsearch/client/php-api/master/_configuration.html#_set_the_endpoint_closure
              */
             'endpoint' => null,
         ],
