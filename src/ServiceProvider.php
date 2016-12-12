@@ -42,6 +42,10 @@ class ServiceProvider extends BaseServiceProvider
     {
         $app = $this->app;
 
+        $this->mergeConfigFrom(__DIR__ . '/../config/elasticsearch.php', 'elasticsearch');
+        config('elasticsearch.connections.default.logObject') === 'monolog' && config(['elasticsearch.connections.default.logObject' => $app->make('log')]);
+        config('scout.elasticsearch.config.logger') === 'monolog' && config(['scout.elasticsearch.config.logger' => $app->make('log')]);
+
         $app->singleton('elasticsearch.factory', function($app) {
             return new Factory();
         });
