@@ -75,6 +75,30 @@ return [
             'logPath' => storage_path('logs/elasticsearch.log'),
             'logLevel' => Monolog\Logger::INFO,
             /**
+             * Logstash's driver
+             * value: redis, file, elasticsearch
+             * 
+             * Logstash's config like:
+             * [file]
+             * input{
+             *     file {
+             *         path => "the monolog path your set, eg: storage_path('logs/logstash-*.log'), windows warning: d:/xxx/*.log, not '\'"
+             *         codec => json {
+             *         }
+             *     }
+             * }
+             * 
+             * [redis]
+             * input {
+             *     redis {
+             *         host => 127.0.0.1
+             *         key => "the redis key, eg: config('elasticsearch.connections.default.index')"
+             *         data_type => ['list']
+             *     }
+             * }
+             */
+            'logstashDriver' => null,
+            /**
              * Retries
              *
              * By default, the client will retry n times, where n = number of nodes in

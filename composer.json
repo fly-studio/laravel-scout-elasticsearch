@@ -16,6 +16,7 @@
     ],
     "require": {
         "php": ">=5.6.10",
+        "laravel/scout": "^1.1",
         "elasticsearch/elasticsearch": "^5.0"
     },
     "autoload": {
