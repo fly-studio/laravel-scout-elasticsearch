@@ -8,7 +8,7 @@ use Monolog\Formatter\LogstashFormatter;
 use Monolog\Handler\ElasticSearchHandler;
 use Monolog\Handler\RedisHandler;
 use Monolog\Handler\RotatingFileHandler;
-
+use Addons\Elasticsearch\Scout\ElasticsearchEngine;
 /**
  * Class ServiceProvider
  *
@@ -36,41 +36,15 @@ class ServiceProvider extends BaseServiceProvider
 			$configPath => config_path('elasticsearch.php'),
 		]);
 
-		//the scout/ElasticsearchEngine supported elasticsearch 2.x, fix it
+		//the scout/ElasticsearchEngine only supported elasticsearch 2.x, fix it
 		app(\Laravel\Scout\EngineManager::class)->extend('elasticsearch', function(){
-			return new AdvancedElasticsearchEngine(
+			return new ElasticsearchEngine(
 				Elasticsearch::fromConfig(config('scout.elasticsearch.config')),
 				config('scout.elasticsearch.index')
 			);
 		});
 
-		$type = app('elasticsearch')->getConfig('index');
-		$index = 'logstash-'.$type;
-		switch (app('elasticsearch')->getConfig('logstashDriver'))
-		{
-			case 'file':
-				$handler = new RotatingFileHandler(
-		            storage_path('/logs/logstash.log'),
-		            config('app.log_max_files', 5),
-		            config('app.log_level', 'debug')
-		        );
-	            $handler->setFormatter(new LogstashFormatter($type, null, null, 'ctxt_', LogstashFormatter::V1));
-				break;
-			case 'redis':
-				$handler = new RedisHandler(app('redis')->connection(), $index);
-	            $handler->setFormatter(new LogstashFormatter($type, null, null, 'ctxt_', LogstashFormatter::V1));
-				break;
-			case 'elasticsearch':
-				// laravel's log write to Logstash
-				$config = [
-					'index' => $index,
-					'type' => $type
-				];
-				$handler = new ElasticSearchHandler(app(Client::class), $config);
-				break;
-				
-		}
-		!empty($handler) && app('log')->getMonolog()->pushHandler($handler);
+		$this->bootLogstash();
 		
 	}
 
@@ -98,5 +72,36 @@ class ServiceProvider extends BaseServiceProvider
 		$app->singleton(Client::class, function($app) {
 			return $app['elasticsearch']->connection();
 		});
+	}
+
+	private function bootLogstash()
+	{
+		$type = app('elasticsearch')->getConfig('index');
+		$index = 'logstash-'.$type;
+		switch (app('elasticsearch')->getConfig('logstashDriver'))
+		{
+			case 'file':
+				$handler = new RotatingFileHandler(
+		            storage_path('/logs/logstash.log'),
+		            config('app.log_max_files', 5),
+		            config('app.log_level', 'debug')
+		        );
+	            $handler->setFormatter(new LogstashFormatter($type, null, null, 'ctxt_', LogstashFormatter::V1));
+				break;
+			case 'redis':
+				$handler = new RedisHandler(app('redis')->connection(), $index);
+	            $handler->setFormatter(new LogstashFormatter($type, null, null, 'ctxt_', LogstashFormatter::V1));
+				break;
+			case 'elasticsearch':
+				// laravel's log write to Logstash
+				$config = [
+					'index' => $index,
+					'type' => $type
+				];
+				$handler = new ElasticSearchHandler(app(Client::class), $config);
+				break;
+				
+		}
+		!empty($handler) && app('log')->getMonolog()->pushHandler($handler);
 	}
 }
