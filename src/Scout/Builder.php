@@ -433,7 +433,7 @@ class Builder {
 				case 'multi_match':
 					$pointer[] = [
 						'multi_match' => [
-							'fileds' => $column,
+							'fields' => $column,
 							'query' => $value,
 						] + $options,
 					];
@@ -442,7 +442,7 @@ class Builder {
 				case 'more_like_this';
 					$pointer[] = [
 						'more_like_this' => [
-							'fileds' => $column,
+							'fields' => $column,
 							'like' => $value,
 						] + $options,
 					];
