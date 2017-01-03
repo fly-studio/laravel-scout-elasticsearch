@@ -104,7 +104,6 @@ class ElasticsearchEngine {
 	public function search(Builder $query)
 	{
 		return $this->performSearch($query, [
-			'filters' => $this->filters($query),
 			'size' => $query->limit ?: 10000,
 		]);
 	}
@@ -117,9 +116,7 @@ class ElasticsearchEngine {
 	 */
 	public function count(Builder $query)
 	{
-		$result = $this->performCount($query, [
-			'filters' => $this->filters($query),
-		]);
+		$result = $this->performCount($query);
 		return isset($result['count']) ? $result['count'] : false;
 	}
 
@@ -131,22 +128,22 @@ class ElasticsearchEngine {
 	 */
 	public function keys(Builder $builder)
 	{
-		$builder->_source = false; //elastic return no _source
+		$builder->set_source(false); //elastic return no _source
 		return $this->getIds($this->search($builder));
 	}
 
 	/**
-     * Get the results of the given query mapped onto models.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function get(Builder $builder)
-    {
-        return Collection::make($this->map(
-            $this->search($builder), $builder->model
-        ));
-    }
+	 * Get the results of the given query mapped onto models.
+	 *
+	 * @param  \Laravel\Scout\Builder  $builder
+	 * @return \Illuminate\Database\Eloquent\Collection
+	 */
+	public function get(Builder $builder)
+	{
+		return Collection::make($this->map(
+			$this->search($builder), $builder->model
+		));
+	}
 
 	/**
 	 * Perform the given search on the engine.
@@ -159,7 +156,6 @@ class ElasticsearchEngine {
 	public function paginate(Builder $query, $perPage, $page)
 	{
 		$result = $this->performSearch($query, [
-			'filters' => $this->filters($query),
 			'size' => $perPage,
 			'from' => (($page * $perPage) - $perPage),
 		]);
@@ -169,17 +165,31 @@ class ElasticsearchEngine {
 		return $result;
 	}
 
+	private function parseBody(Builder $builder)
+	{
+		$body = [];
+		foreach(['query_string', 'match_all'/*, 'common', '', ''*/] as $var)
+		{
+			if (!is_null($builder->$var))
+			{
+				$body['query'][$var] = $builder->$var;
+				break;
+			}
+		}
+		empty($body['query']) && $body['query'] = $builder->bool->toArray();
+
+		foreach(['_source', 'track_scores', 'stored_fields', 'docvalue_fields', 'highlight', 'rescore', 'explain', 'version', 'indices_boost', 'min_score', 'search_after'] as $var)
+			!is_null($builder->$var) && $body[$var] = $builder->$var;
+		return $body;
+	}
+
 	protected function performCount(Builder $builder, array $options = [])
 	{
 		$query = [
 			'index' =>  $this->index,
 			'type'  =>  $builder->model->searchableAs(),
-			'body' => [
-				'query' => $options['filters'],
-			],
+			'body' => $this->parseBody($builder),
 		];
-		!empty($builder->match_all) && $query['body']['match_all'] = $builder->match_all;
-
 		return $this->elasticsearch->count($query);
 	}
 
@@ -195,21 +205,16 @@ class ElasticsearchEngine {
 	{
 		$query = [
 			'index' =>  $this->index,
-			'type'  =>  $builder->model->searchableAs(),
-			'body' => [
-				'_source' => $builder->_source,
-				'query' => $options['filters'],
-			],
+			'type' =>  $builder->model->searchableAs(),
+			'body' => $this->parseBody($builder),
+			'sort' => $builder->orders,
 		];
-		!empty($builder->match_all) && $query['body']['match_all'] = $builder->match_all;
 
-		if (array_key_exists('size', $options)) {
+		if (array_key_exists('size', $options))
 			$query['size'] = $options['size'];
-		}
 
-		if (array_key_exists('from', $options)) {
+		if (array_key_exists('from', $options))
 			$query['from'] = $options['from'];
-		}
 
 		if ($builder->callback) {
 			return call_user_func(
@@ -218,21 +223,8 @@ class ElasticsearchEngine {
 				$query
 			);
 		}
-
 		return $this->elasticsearch->search($query);
 	}
-
-	/**
-	 * Get the filter array for the query.
-	 *
-	 * @param  Builder  $query
-	 * @return array
-	 */
-	protected function filters(Builder $query)
-	{
-		return $query->wheres->toArray();
-	}
-
 
 	/**
 	 * Map the given results to instances of the given model.
