@@ -101,11 +101,9 @@ class ElasticsearchEngine {
 	 * @param  Builder  $query
 	 * @return mixed
 	 */
-	public function search(Builder $query)
+	public function execute(Builder $query)
 	{
-		return $this->performSearch($query, [
-			'size' => $query->limit ?: 10000,
-		]);
+		return $this->performSearch($query, !is_null($query->limit) ? ['size' => $query->limit] : []);
 	}
 
 	/**
@@ -123,26 +121,39 @@ class ElasticsearchEngine {
 	/**
 	 * Get the results of the query as a Collection of primary keys.
 	 *
-	 * @param  \Laravel\Scout\Builder  $builder
+	 * @param  Addons\ElasticSearch\Scout\Builder  $builder
 	 * @return \Illuminate\Support\Collection
 	 */
 	public function keys(Builder $builder)
 	{
-		$builder->set_source(false); //elastic return no _source
-		return $this->getIds($this->search($builder));
+		return $this->getIds($this->execute($builder));
 	}
 
 	/**
 	 * Get the results of the given query mapped onto models.
 	 *
-	 * @param  \Laravel\Scout\Builder  $builder
+	 * @param  Addons\ElasticSearch\Scout\Builder  $builder
 	 * @return \Illuminate\Database\Eloquent\Collection
 	 */
 	public function get(Builder $builder)
 	{
 		return Collection::make($this->map(
-			$this->search($builder), $builder->model
+			$this->execute($builder), $builder->model
 		));
+	}
+
+	/**
+	 * Get the aggregations of the give aggs
+	 * [warning] excute a search with each 'aggregations'
+	 * 
+	 * @param  Addons\ElasticSearch\Scout\Builder  $builder
+	 * @param  string  $key     eg: user_id_cardinality.value
+	 * @return mixed
+	 */
+	public function aggregations(Builder $builder, $key = null)
+	{
+		$result = $this->execute($builder);
+		return is_null($key) ? $result['aggregations'] : array_get($result['aggregations'], $key);
 	}
 
 	/**
@@ -178,8 +189,9 @@ class ElasticsearchEngine {
 		}
 		empty($body['query']) && $body['query'] = $builder->bool->toArray();
 
-		foreach(['_source', 'track_scores', 'stored_fields', 'docvalue_fields', 'highlight', 'rescore', 'explain', 'version', 'indices_boost', 'min_score', 'search_after'] as $var)
+		foreach(['_source', 'aggs', 'track_scores', 'stored_fields', 'docvalue_fields', 'highlight', 'rescore', 'explain', 'version', 'indices_boost', 'min_score', 'search_after'] as $var)
 			!is_null($builder->$var) && $body[$var] = $builder->$var;
+
 		return $body;
 	}
 

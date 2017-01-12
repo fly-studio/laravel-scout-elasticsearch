@@ -155,11 +155,19 @@ class Builder {
 	public $bool = null;
 
 	/**
+     * The "aggs" constraints added to the body.
+     * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html
+     *
+     * @var array
+     */
+    public $aggs = null;
+
+	/**
 	 * The "limit" that should be applied to the search.
 	 *
 	 * @var int
 	 */
-	public $limit;
+	public $limit = null;
 
 	/**
 	 * The "order" that should be applied to the search.
@@ -226,6 +234,7 @@ class Builder {
 	 */
 	public function keys()
 	{
+		$this->set_source(false); //elastic return no _source
 		return $this->engine()->keys($this);
 	}
 
@@ -254,7 +263,8 @@ class Builder {
 
 	public function get($columns = ['*'])
 	{
-		$this->_source = $columns;
+		$this->set_source($columns);
+		!is_null($this->limit) && $this->take(2000);
 		return $this->engine()->get($this);
 	}
 
@@ -265,7 +275,7 @@ class Builder {
 	 */
 	public function first($columns = ['*'])
 	{
-		$this->_source = $columns;
+		$this->set_source($columns)->take(1);
 		return $this->get()->first();
 	}
 
@@ -278,6 +288,28 @@ class Builder {
 	public function count()
 	{
 		return $this->engine()->count($this);
+	}
+
+	/**
+	 * Get the RAW from the search
+	 *
+	 * @return array
+	 */
+	public function execute()
+	{
+		return $this->engine()->execute();
+	}
+
+	/**
+	 * Get the aggregations from the search
+	 * [warning] excute a search with each 'aggregations'
+	 *
+	 * @return mixed
+	 */
+	public function aggregations($key = null)
+	{
+		$this->take(0)->set_source(false);
+		return $this->engine()->aggregations($this, $key);
 	}
 
 	/**
@@ -357,6 +389,19 @@ class Builder {
 	public function setMatchAll($match_all)
 	{
 		$this->match_all = $match_all;
+		return $this;
+	}
+
+
+	/**
+     * The "aggs" constraints added to the body.
+     * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html
+     *
+     * @param array
+     */
+	public function setAggs($aggs)
+	{
+		$this->aggs = $aggs;
 		return $this;
 	}
 
@@ -594,12 +639,17 @@ class Builder {
 		if (isset($parameters[0]) && Str::startsWith($method, 'set'))
 		{
 			$var = Str::snake(Str::substr($method, 3));
-			isset($this->$var) && $this->$var = $parameters[0];
+			if (property_exists($this, $var)) {
+				$this->$var = $parameters[0];
+				return $this;
+			} 
 		} elseif (empty($parameters[0]) && Str::startsWith($method, 'get')) {
 			$var = Str::snake(Str::substr($method, 3));
-			return isset($this->$var) ? $this->$var : null;
+			if (property_exists($this, $var))
+				return $this->$var;
 		}
-		return $this;
+
+		throw new \Exception("Method is not exists", 1);
 	}
 
 }
