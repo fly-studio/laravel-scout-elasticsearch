@@ -114,7 +114,7 @@ class Manager
     public function getConfig($config, $connectionName = null)
     {
         empty($connectionName) && $connectionName = $this->getDefaultConnection();
-        return config('elasticsearch.connections.'.$connectionName.'.'.$config);
+        return config('elasticsearch.connections.'.$connectionName.'.'.$config, null);
     }
 
     /**
