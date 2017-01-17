@@ -2,13 +2,14 @@
 namespace Addons\Elasticsearch;
 
 use Elasticsearch\Client;
-use Elasticsearch\ClientBuilder as Elasticsearch;
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+use Monolog\Handler\RedisHandler;
+use Addons\Elasticsearch\Scout\Console\ImportRangeCommand;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Formatter\LogstashFormatter;
 use Monolog\Handler\ElasticSearchHandler;
-use Monolog\Handler\RedisHandler;
-use Monolog\Handler\RotatingFileHandler;
+use Elasticsearch\ClientBuilder as Elasticsearch;
 use Addons\Elasticsearch\Scout\ElasticsearchEngine;
+use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 /**
  * Class ServiceProvider
  *
@@ -59,6 +60,7 @@ class ServiceProvider extends BaseServiceProvider
 
 		$this->mergeConfigFrom(__DIR__ . '/../config/elasticsearch.php', 'elasticsearch');
 		$connectionName = config('elasticsearch.defaultConnection');
+
 		config('elasticsearch.connections.'.$connectionName.'.logObject') === 'monolog' && config(['elasticsearch.connections.'.$connectionName.'.logObject' => $app->make('log')]);
 		config('scout.elasticsearch.config.logger') === 'monolog' && config(['scout.elasticsearch.config.logger' => $app->make('log')]);
 
@@ -73,6 +75,12 @@ class ServiceProvider extends BaseServiceProvider
 		$app->singleton(Client::class, function($app) {
 			return $app['elasticsearch']->connection();
 		});
+
+		 if ($this->app->runningInConsole()) {
+            $this->commands([
+                ImportRangeCommand::class,
+            ]);
+        }
 	}
 
 	private function bootLogstash()
