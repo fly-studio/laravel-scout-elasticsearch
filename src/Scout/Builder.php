@@ -472,7 +472,7 @@ class Builder {
 	 */
 	public function whereIn($column, $values)
 	{
-		return $this->where($column, 'terms', $values);
+		return $this->where($column, 'terms', (array)$values);
 	}
 
 	public function whereAll($value)
