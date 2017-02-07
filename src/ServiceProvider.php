@@ -40,7 +40,7 @@ class ServiceProvider extends BaseServiceProvider
 		//the scout/ElasticsearchEngine only supported elasticsearch 2.x, fix it
 		app(\Laravel\Scout\EngineManager::class)->extend('elasticsearch', function(){
 			return new ElasticsearchEngine(
-				Elasticsearch::fromConfig(config('scout.elasticsearch.config')),
+				app('elasticsearch')->connection(),/*Elasticsearch::fromConfig(config('scout.elasticsearch.config')),*/
 				config('scout.elasticsearch.index')
 			);
 		});
