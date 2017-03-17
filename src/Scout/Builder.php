@@ -457,7 +457,7 @@ class Builder {
 			$new->setBool($boolOccur, $bool);
 			call_user_func_array($column, [$new]);
 		} else
-			$this->parseWhere($column, $operator, $value);
+			$this->parseWhere($column, $operator, $value, $options);
 
 		return $this;
 	}
