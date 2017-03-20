@@ -121,13 +121,12 @@ User::search('should', function($elasticsearch, $query){
 ```
 
 #### where(string $column, string $operator, mixed $value, $options = [])
-
  - $column [string]:
 
     the field's name that you wanna to search.
  - $operator [string]:    term,=|terms,in|match,like|multi_match|range|prefix|common|wildcard|regexp|fuzzy|type|match_phrase|match_phrase_prefix|more_like_this|exists
 
-    https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html
+    `https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html`
  - $value [mixed]:
 
     the value that you wanna to search.
@@ -137,7 +136,11 @@ User::search('should', function($elasticsearch, $query){
 
 ** Example 1 **
 ```php
-User::search()->where('name', '=', 'admin')->where('gender', 'in', ['male', 'unknow'])->where('title', 'like', 'Super')->get();
+User::search()
+->where('name', '=', 'admin')
+->where('gender', 'in', ['male', 'unknow'])
+->where('title', 'like', 'Super')
+->get();
 
 //JSON
 {
@@ -157,10 +160,6 @@ User::search()->where('name', '=', 'admin')->where('gender', 'in', ['male', 'unk
                 "title": {
                     "query": "Super"
                 }
-            }
-        }, {
-            "match": {
-                "title": "Super"
             }
         }]
     }
@@ -322,7 +321,7 @@ It equal to `whereNot($column, 'in', $value)`
   default: []
 
 Allows to add one or more sort on specific fields.
-https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-sort.html
+`https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-sort.html`
 
 ** Example **
 ```
