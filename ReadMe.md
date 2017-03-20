@@ -134,7 +134,7 @@ User::search('should', function($elasticsearch, $query){
 
     the elasticseach DSL's parameters
 
-** Example 1 **
+**Example 1**
 ```php
 User::search()
 ->where('name', '=', 'admin')
@@ -165,7 +165,7 @@ User::search()
     }
 }
 ```
-** Example 2: with options**
+**Example 2: with option**
 ```php
 User::search()->where('created_at', 'range', [
     'gte' => '2000-01-01 00:00:00',
@@ -199,7 +199,7 @@ It equal to `where($field, '=', $value);`
 
   default: must
 
-** Example **
+**Example**
 ```php
 // like SQL: WHERE `name` = 'admin' AND (`gender` is null or `gender` = 'female')
 User::search()
@@ -240,7 +240,7 @@ User::search()
 #### whereNot(string $column, string $operator = null, mixed $value = null, array $options = [])
 It equal to `where(Closure, 'must_not')`
 
-** Example 1 **
+**Example 1**
 ```php
 User::search()->whereNot('name', 'admin')->where('gender', 'female')->get();
 
@@ -267,7 +267,7 @@ User::search()->whereNot('name', 'admin')->where('gender', 'female')->get();
     }
 }
 ```
-** Example 2 **
+**Example 2**
 ```php
 User::search()->where(function($query){
   $query->where('name', 'admin')
@@ -323,7 +323,7 @@ It equal to `whereNot($column, 'in', $value)`
 Allows to add one or more sort on specific fields.
 `https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-sort.html`
 
-** Example **
+**Example**
 ```
 User::search()->where(...)
 ->orderBy('created_at', 'desc')
@@ -371,7 +371,7 @@ User::search()->where(...)
 
 Get data, like Model's get(), return Collection
 
-** Example **
+**Example**
 ```php
 Use::search()->where(...)->get();
 
@@ -381,7 +381,7 @@ Use::search()->where(...)->get(['name', 'gender', 'created_at']);
 #### keys()
 Make all records's id to an array
 
-** Example **
+**Example**
 ```php
 Use::search()->where(...)->keys();
 ```
@@ -402,7 +402,7 @@ User::search()->paginate(25, ['*'], 'page', 4);
 - $aggs [array]:
   the aggs's array
 
-** Example **
+**Example**
 ```php
 $aggs = [
     'distinct_uid' =>[
@@ -420,7 +420,7 @@ User::search()->setAggs($aggs)->aggregations('distinct_uid.value');
 
   if defined, use `array_get($returnData, $key)`` to find value
 
-** Example **
+**Example**
 ```php
 //return All aggs's data
 User::search()->setAggs($aggs)->aggregations();
