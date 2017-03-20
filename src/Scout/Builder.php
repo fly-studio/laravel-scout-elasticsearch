@@ -576,6 +576,7 @@ class Builder {
 							] + $options,
 						],
 					];
+					break;
 				//https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html
 				case 'terms':
 					$pointer[] = [
@@ -617,6 +618,7 @@ class Builder {
 							'field' => $column,
 						],
 					];
+					break;
 				default:
 
 					break;
