@@ -1,7 +1,7 @@
 {
     "name": "addons/elasticsearch",
     "description": "Laravel's elasticsearch Paginator/Collection/Logger Helper.",
-    "homepage": "https://www.load-page.com",
+    "homepage": "https://www.load-page.com/manuals",
     "keywords": ["L5", "Laravel 5", "Laravel","elasticsearch","MonoLog", "Paginator", "Collection"],
     "license": "MIT",
     "support": {
@@ -17,7 +17,8 @@
     "require": {
         "php": ">=5.6.10",
         "laravel/scout": "^3.0",
-        "elasticsearch/elasticsearch": "^5.0"
+        "elasticsearch/elasticsearch": "^5.0",
+        "addons/func": "dev-master"
     },
     "autoload": {
         "psr-4": {
