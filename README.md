@@ -33,6 +33,20 @@ Add the service provider and facade to `config/app.php`:
 ]
 ```
 
+Pull this to `.env`
+
+```
+SCOUT_DRIVER=elasticsearch
+SCOUT_PREFIX=
+ELASTICSEARCH_INDEX=
+ELASTICSEARCH_HOST=127.0.0.1
+```
+
+- ELASTICSEARCH_INDEX : your elastic's index
+- ELASTICSEARCH_HOST: your elastic's host
+- if you comment `#SCOUT_DRIVER` (add # at first), it will close the search.
+
+
 Publish the configuration file:
 
 ```shell
