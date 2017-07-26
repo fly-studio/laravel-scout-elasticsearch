@@ -11,10 +11,6 @@ trait Indexable
 
     public $hasIndex = null;
 
-    /**
-     * @param bool $includeBody
-     * @return array
-     */
     public function getEsParams($includeBody = false)
     {
         $params = [
@@ -28,76 +24,60 @@ trait Indexable
         return $params;
     }
 
-
-    /**
-     * @return null
-     * @throws \Exception
-     */
-    public function hasIndex()
+    public function checkDocument()
     {
         if (!$this->exists) {
             throw new \Exception('Document does not exist.');
         }
+    }
+
+
+    public function hasIndex()
+    {
+        $this->checkDocument();
         if (is_null($this->hasIndex)) {
-            return $this->hasIndex =  app('elasticsearch')->connection()->exists($this->getEsParams());
+            $this->hasIndex = app('elasticsearch')->connection()->exists($this->getEsParams());
         }
         return $this->hasIndex;
     }
 
-    /**
-     * @return mixed
-     * @throws \Exception
-     */
+
     public function addToIndex()
     {
-        if (!$this->exists) {
-            throw new \Exception('Document does not exist.');
+        $this->checkDocument();
+        if (!$this->hasIndex()) {
+            $this->hasIndex = null;
+            return app('elasticsearch')->connection()->index($this->getEsParams(true));
         }
-        if ($this->hasIndex()) {
-            return $this->updateIndex();
-        }
-        return  app('elasticsearch')->connection()->index($this->getEsParams(true));
+        return null;
+//        return $this->updateIndex();
     }
 
-    /**
-     * @return mixed
-     * @throws \Exception
-     */
+
     public function reindex()
     {
-        if (!$this->exists) {
-            throw new \Exception('Document does not exist.');
-        }
+        $this->checkDocument();
         $this->removeFromIndex();
         return $this->addToIndex();
     }
 
-    /**
-     * @return null
-     * @throws \Exception
-     */
     public function removeFromIndex()
     {
-        if (!$this->exists) {
-            throw new \Exception('Document does not exist.');
-        }
+        $this->checkDocument();
         if ($this->hasIndex()) {
-            return  app('elasticsearch')->connection()->delete($this->getEsParams());
+            $this->hasIndex = false;
+            return app('elasticsearch')->connection()->delete($this->getEsParams());
         }
         return null;
     }
 
-    /**
-     * @return mixed
-     * @throws \Exception
-     */
+
     public function updateIndex()
     {
-        if (!$this->exists) {
-            throw new \Exception('Document does not exist.');
-        }
+        $this->checkDocument();
         if ($this->hasIndex()) {
-            return  app('elasticsearch')->connection()->update($this->getEsParams(true));
+            $this->hasIndex = null;
+            return app('elasticsearch')->connection()->update($this->getEsParams(true));
         }
         return $this->addToIndex();
     }
