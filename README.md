@@ -14,7 +14,7 @@ An easy way to use the official Elastic Search client in your Laravel 5.
 Install the `addons/elasticsearch` package via composer:
 
 ```shell
-composer require addons/elasticsearch:dev-master
+composer require addons/elasticsearch
 ```
 
 ### Laravel
@@ -24,6 +24,7 @@ Add the service provider and facade to `config/app.php`:
 ```php
 'providers' => [
     ...
+    Laravel\Scout\ScoutServiceProvider::class,
     Addons\Elasticsearch\ServiceProvider::class,
 ]
 
@@ -33,7 +34,9 @@ Add the service provider and facade to `config/app.php`:
 ]
 ```
 
-Pull this to `.env`
+`ScoutServiceProvider` must Before the `Addons\Elasticsearch\ServiceProvider`.
+
+Pull these to the `.env`
 
 ```
 SCOUT_DRIVER=elasticsearch
@@ -464,7 +467,7 @@ Logstash can read and parse it;
 ## Copyright and License
 
 [elasticsearch](https://git.load-page.com/addons/elasticsearch)
-was written by [Colin Viebrock](http://viebrock.ca),[Fly](https://www.load-page.com/base/manual) and is released under the
+was written by [Colin Viebrock](http://viebrock.ca), [Fly](https://www.load-page.com/base/manual) and is released under the
 [MIT License](LICENSE.md).
 
 Copyright (c) 2016-2017
