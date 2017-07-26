@@ -24,6 +24,7 @@ Add the service provider and facade to `config/app.php`:
 ```php
 'providers' => [
     ...
+    Laravel\Scout\ScoutServiceProvider::class,
     Addons\Elasticsearch\ServiceProvider::class,
 ]
 
@@ -43,6 +44,8 @@ php artisan vendor:publish --provider="Addons\Elasticsearch\ServiceProvider"
 
 ### Elasticsearch Builder for laravel/scout
 
+
+
 #### use in model
 
 ```php
@@ -54,6 +57,17 @@ class User extends Model {
     use Searchable;
 }
 ```
+#### Index example
+```php
+$book = Book::find(1);
+
+$book->addToIndex();
+$book->removeFromIndex();
+$book->updateIndex();
+$book->reindex();
+$book->hasIndex();
+```
+
 #### Search example
 ```
 User::search('must')->where('name', 'admin')->whereIn('type', ['1', '2'])->get();

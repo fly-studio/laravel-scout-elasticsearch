@@ -6,6 +6,7 @@ use Addons\Elasticsearch\Scout\Builder;
 
 trait Searchable {
 	use BaseSearchable;
+	use Indexable;
 
 	/**
 	 * Perform a search against the model's indexed data.
