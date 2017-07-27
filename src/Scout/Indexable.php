@@ -74,11 +74,14 @@ trait Indexable
 
     public function updateIndex()
     {
-        $this->checkDocument();
-        if ($this->hasIndex()) {
-            $this->hasIndex = null;
-            return app('elasticsearch')->connection()->update($this->getEsParams(true));
-        }
-        return $this->addToIndex();
+        return $this->reindex();
+//        updateIndex 还有一些问题，暂时先用 reindex 代替。
+//        $this->checkDocument();
+//        if ($this->hasIndex()) {
+//            $this->hasIndex = null;
+//            \Log::info('updateIndex', $this->getEsParams(true));
+//            return app('elasticsearch')->connection()->update($this->getEsParams(true));
+//        }
+//        return $this->addToIndex();
     }
 }
