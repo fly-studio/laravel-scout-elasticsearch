@@ -11,6 +11,10 @@ trait Indexable
 
     public $hasIndex = null;
 
+    /**
+     * @param bool $includeBody
+     * @return array
+     */
     public function getEsParams($includeBody = false)
     {
         $params = [
@@ -24,6 +28,9 @@ trait Indexable
         return $params;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function checkDocument()
     {
         if (!$this->exists) {
@@ -32,6 +39,9 @@ trait Indexable
     }
 
 
+    /**
+     * @return array|bool|null
+     */
     public function hasIndex()
     {
         $this->checkDocument();
@@ -42,6 +52,9 @@ trait Indexable
     }
 
 
+    /**
+     * @return array
+     */
     public function addToIndex()
     {
         $this->checkDocument();
@@ -49,18 +62,21 @@ trait Indexable
             $this->hasIndex = null;
             return app('elasticsearch')->connection()->index($this->getEsParams(true));
         }
-        return null;
-//        return $this->updateIndex();
+        return $this->updateIndex();
     }
 
-
+    /**
+     * @return array
+     */
     public function reindex()
     {
-        $this->checkDocument();
         $this->removeFromIndex();
         return $this->addToIndex();
     }
 
+    /**
+     * @return array|null
+     */
     public function removeFromIndex()
     {
         $this->checkDocument();
@@ -72,16 +88,21 @@ trait Indexable
     }
 
 
+    /**
+     * @return array
+     */
     public function updateIndex()
     {
-        return $this->reindex();
-//        updateIndex 还有一些问题，暂时先用 reindex 代替。
-//        $this->checkDocument();
-//        if ($this->hasIndex()) {
-//            $this->hasIndex = null;
-//            \Log::info('updateIndex', $this->getEsParams(true));
-//            return app('elasticsearch')->connection()->update($this->getEsParams(true));
-//        }
-//        return $this->addToIndex();
+        $this->checkDocument();
+        if ($this->hasIndex()) {
+            $this->hasIndex = null;
+            $params = $this->getEsParams(true);
+            $body = $params['body'];
+            $params['body'] = [
+                'doc' => $body
+            ];
+            return app('elasticsearch')->connection()->update($params);
+        }
+        return $this->addToIndex();
     }
 }
