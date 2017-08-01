@@ -72,6 +72,17 @@ class User extends Model {
     use Searchable;
 }
 ```
+#### Index example
+
+```php
+$book = Book::find(1);
+
+$book->addToIndex();
+$book->removeFromIndex();
+$book->updateIndex();
+$book->reindex();
+$book->hasIndex();
+```
 
 #### Search example
 
