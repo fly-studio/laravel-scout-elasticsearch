@@ -1,11 +1,12 @@
 <?php
 namespace Addons\Elasticsearch\Scout;
 
-use Laravel\Scout\Searchable as BaseSearchable;
 use Addons\Elasticsearch\Scout\Builder;
+use Laravel\Scout\Searchable as BaseSearchable;
 
 trait Searchable {
 	use BaseSearchable;
+	use Indexable;
 
 	/**
 	 * Perform a search against the model's indexed data.
