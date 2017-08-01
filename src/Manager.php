@@ -1,8 +1,8 @@
 <?php
+
 namespace Addons\Elasticsearch;
 
 use Illuminate\Contracts\Foundation\Application;
-
 
 /**
  * Class Manager
@@ -104,7 +104,7 @@ class Manager
     public function getConnectionConfig($connectionName)
     {
         $config = config('elasticsearch.connections.'.$connectionName);
-        
+
         if (is_null($config))
             throw new \InvalidArgumentException("Elasticsearch connection [$name] not configured.");
 

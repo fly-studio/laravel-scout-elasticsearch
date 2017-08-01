@@ -1,10 +1,12 @@
 <?php
+
 namespace Addons\Elasticsearch\Scout;
 
 use Addons\Elasticsearch\Scout\Builder;
 use Elasticsearch\Client as Elasticsearch;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
+
 //see Laravel\Scout\Engines\ElasticsearchEngine;
 class ElasticsearchEngine {
 
@@ -145,7 +147,7 @@ class ElasticsearchEngine {
 	/**
 	 * Get the aggregations of the give aggs
 	 * [warning] excute a search with each 'aggregations'
-	 * 
+	 *
 	 * @param  Addons\ElasticSearch\Scout\Builder  $builder
 	 * @param  string  $key     eg: user_id_cardinality.value
 	 * @return mixed

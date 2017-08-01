@@ -1,4 +1,5 @@
 <?php
+
 namespace Addons\Elasticsearch\Scout;
 
 use Addons\Elasticsearch\Scout\Builder;
@@ -10,7 +11,7 @@ trait Searchable {
 
 	/**
 	 * Perform a search against the model's indexed data.
-	 * @example 
+	 * @example
 	 * search()->where(...)->get(['*'])
 	 * search('shold')->where(...)->get(['*'])
 	 * search()->where(...)->keys()
@@ -18,7 +19,7 @@ trait Searchable {
 	 *
 	 * @note
 	 * querystring,bool,match_all is only one effective
-	 * 
+	 *
 	 *
 	 * @param string         $boolOccur    [must]|should|filter|must_not https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-bool-query.html
 	 * @param Closure        $callback
@@ -43,7 +44,7 @@ trait Searchable {
         $builder = $self->newQuery();
         if (!empty($min)) $builder->where($self->getKeyName(), '>=', $min);
         if (!empty($max) && $max >= $min) $builder->where($self->getKeyName(), '<=', $max);
-        
+
         $builder->orderBy($self->getKeyName())
             ->searchable();
     }

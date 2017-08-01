@@ -1,15 +1,17 @@
 <?php
+
 namespace Addons\Elasticsearch;
 
 use Elasticsearch\Client;
 use Monolog\Handler\RedisHandler;
-use Addons\Elasticsearch\Scout\Console\ImportRangeCommand;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Formatter\LogstashFormatter;
 use Monolog\Handler\ElasticSearchHandler;
 use Elasticsearch\ClientBuilder as Elasticsearch;
 use Addons\Elasticsearch\Scout\ElasticsearchEngine;
+use Addons\Elasticsearch\Scout\Console\ImportRangeCommand;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+
 /**
  * Class ServiceProvider
  *
@@ -46,7 +48,7 @@ class ServiceProvider extends BaseServiceProvider
 		});
 
 		$this->bootLogstash();
-		
+
 	}
 
 	/**
@@ -109,7 +111,7 @@ class ServiceProvider extends BaseServiceProvider
 				];
 				$handler = new ElasticSearchHandler(app(Client::class), $config);
 				break;
-				
+
 		}
 		!empty($handler) && app('log')->getMonolog()->pushHandler($handler);
 	}

@@ -1,9 +1,9 @@
 <?php
+
 namespace Addons\Elasticsearch;
 
-use Elasticsearch\ClientBuilder;
 use Psr\Log\LoggerInterface;
-
+use Elasticsearch\ClientBuilder;
 
 class Factory
 {
@@ -57,9 +57,11 @@ class Factory
         // Configure logging
 
         if (array_get($config, 'logging')) {
+
             $logObject = array_get($config, 'logObject');
             $logPath = array_get($config, 'logPath');
             $logLevel = array_get($config, 'logLevel');
+
             if (!empty($logObject) && $logObject instanceof LoggerInterface) {
                 $clientBuilder->setLogger($logObject);
             } else if ($logPath && $logLevel) {
@@ -71,10 +73,11 @@ class Factory
         // Set additional client configuration
 
         foreach ($this->configMappings as $key => $method) {
+
             $value = array_get($config, $key);
-            if ($value !== null) {
+
+            if (!is_null($value))
                 call_user_func([$clientBuilder, $method], $value);
-            }
         }
 
         // Build and return the client

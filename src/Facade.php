@@ -1,8 +1,8 @@
 <?php
+
 namespace Addons\Elasticsearch;
 
 use Illuminate\Support\Facades\Facade as BaseFacade;
-
 
 /**
  * Class Facade
