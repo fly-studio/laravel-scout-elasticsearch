@@ -29,6 +29,15 @@
         "files": [
         ]
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Addons\\Elasticsearch\\ServiceProvider::class,"
+            ],
+            "aliases": {
+            }
+        }
+    },
     "minimum-stability": "dev"
-    
+
 }
