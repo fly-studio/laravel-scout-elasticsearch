@@ -5,8 +5,8 @@
     "keywords": ["L5", "Laravel 5", "Laravel","elasticsearch","MonoLog", "Paginator", "Collection"],
     "license": "MIT",
     "support": {
-        "issues": "https://git.load-page.com/addons/elasticsearch/issues",
-        "source": "https://git.load-page.com/addons/elasticsearch"
+        "issues": "https://github.com/fly-studio/laravel-scout-elasticsearch/issues",
+        "source": "https://github.com/fly-studio/laravel-scout-elasticsearch"
     },
     "authors": [
         {
@@ -16,8 +16,8 @@
     ],
     "require": {
         "php": ">=5.6.10",
-        "laravel/scout": "^3.0",
-        "elasticsearch/elasticsearch": "^6.0"
+        "laravel/scout": "^3.0 || ^4.0",
+        "elasticsearch/elasticsearch": "^5.0 || ^6.0"
     },
     "autoload": {
         "psr-4": {
