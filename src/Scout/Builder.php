@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 
 //see Laravel\Scout\Builder
-class Builder {
+class Builder extends \Laravel\Scout\Builder {
 
 	/**
 	 * The model instance.
