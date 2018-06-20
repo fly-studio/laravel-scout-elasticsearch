@@ -3,13 +3,14 @@
 namespace Addons\Elasticsearch\Scout;
 
 use Closure;
+use BadMethodCallException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 
-//see Laravel\Scout\Builder
+// see Laravel\Scout\Builder
 class Builder extends \Laravel\Scout\Builder {
 
 	/**
@@ -286,7 +287,7 @@ class Builder extends \Laravel\Scout\Builder {
 	 * Get the count from the search.
 	 * it's easy way, with _count API of elastic
 	 *
-	 * @return \Illuminate\Database\Eloquent\Model
+	 * @return int
 	 */
 	public function count()
 	{
@@ -305,7 +306,7 @@ class Builder extends \Laravel\Scout\Builder {
 
 	/**
 	 * Get the aggregations from the search
-	 * [warning] excute a search with each 'aggregations'
+	 * [warning] one search with one 'aggregations' at builder's end
 	 *
 	 * @return mixed
 	 */
@@ -478,14 +479,45 @@ class Builder extends \Laravel\Scout\Builder {
 		return $this->where($column, 'terms', (array)$values);
 	}
 
+	/**
+	 * search all fields
+	 *
+	 * @param  string $value a string
+	 * @return Builder       this
+	 */
 	public function whereAll($value)
 	{
 		$this->_all = $value;
 		return $this->where('_all', $value);
 	}
 
+	public function whereOr($column, $operator = null, $value = null, $options = [])
+	{
+		return $this->where(function($builder) use ($column, $operator, $value, $options){
+			$builder->where($column, $operator, $value, $options);
+		}, 'should');
+	}
+
+
 	/**
-	 * like SQL's where `f` != 'v'
+	 * like SQL: is null
+	 * @example User::search('should')->whereExists('gender')->where('gender', 'male')->get(); SELECT * FROM (gender is null OR gender = 'male')
+	 *
+	 * @param  [type] $column [description]
+	 * @return [type]         [description]
+	 */
+	public function whereExists($column)
+	{
+		return $this->where($column, 'exists', '');
+	}
+
+	/**
+	 * like SQL's WHERE `f` != 'v'
+	 *
+	 * @example User::search()->whereNot('gender', 'famale')->get();
+	 * @example User::search()->whereNot(function($query) {
+	 *          $query->where(1)->where(2); // where not (1 and 2)
+	 * })->get();
 	 *
 	 * @param  string|array $column   see where's column
 	 * @param  string       $operator see where's operator
@@ -501,7 +533,7 @@ class Builder extends \Laravel\Scout\Builder {
 	}
 
 	/**
-	 * like SQL's where not in
+	 * like SQL's WHERE `f` not in [$val]
 	 *
 	 * @param  [type] $column [description]
 	 * @param  [type] $values [description]
@@ -654,7 +686,8 @@ class Builder extends \Laravel\Scout\Builder {
 				return $this->$var;
 		}
 
-		throw new \Exception("Method is not exists", 1);
+		throw new BadMethodCallException("Method [{$method}] does not exist.");
+
 	}
 
 }

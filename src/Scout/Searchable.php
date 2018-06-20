@@ -6,8 +6,9 @@ use Addons\Elasticsearch\Scout\Builder;
 use Laravel\Scout\Searchable as BaseSearchable;
 
 trait Searchable {
+
 	use BaseSearchable;
-	use Indexable;
+	use Typeable;
 
 	/**
 	 * Perform a search against the model's indexed data.

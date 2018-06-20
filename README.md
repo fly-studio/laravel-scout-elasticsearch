@@ -19,6 +19,8 @@ composer require addons/elasticsearch
 
 ### Laravel
 
+> If you used laravel 5.5+, execute `php artisan package:discover` only. no need to add the providers to `config/app.php`.
+
 Add the service provider and facade to `config/app.php`:
 
 ```php
@@ -34,9 +36,9 @@ Add the service provider and facade to `config/app.php`:
 ]
 ```
 
-`ScoutServiceProvider` must Before the `Addons\Elasticsearch\ServiceProvider`.
+`ScoutServiceProvider` must **Before** the `Addons\Elasticsearch\ServiceProvider`.
 
-Pull these to the `.env`
+Put these to the `.env`
 
 ```
 SCOUT_DRIVER=elasticsearch
@@ -63,6 +65,8 @@ php artisan vendor:publish --provider="Addons\Elasticsearch\ServiceProvider"
 
 #### use in model
 
+> the laravel/scout uses the laravel-queue to insert/update data to elastic, So you must enable your queue.
+
 ```php
 //app\User.php
 
@@ -72,16 +76,20 @@ class User extends Model {
     use Searchable;
 }
 ```
-#### Index example
+
+#### CRUD of the record of Model 
+
+Normally, your laravel/queue was enabled, and the database will automatic crud to the elasticsearch.
+Of course, you can manual it.
 
 ```php
 $book = Book::find(1);
 
-$book->addToIndex();
-$book->removeFromIndex();
-$book->updateIndex();
-$book->reindex();
-$book->hasIndex();
+$book->addToType(); // insert the record to es
+$book->updateToType(); // update the record to es
+$book->removeFromType(); // remove this record from es
+$book->resetToType(); // remove and insert this record
+$book->inType(); // exists in the type
 ```
 
 #### Search example
@@ -115,6 +123,7 @@ User::search('must')->where('name', 'admin')->whereIn('type', ['1', '2'])->get()
 - $boolOccur [string]:  must|should|filter|must_not
 
   default: must
+
 - $callback [Closure]:  null|Closure
 
   It'll call before get();
@@ -140,12 +149,21 @@ User::search()->where(...)->get();
         ]
     }
 }
+```
 
-User::search('should', function($elasticsearch, $query){
-    dd($query);
+#### Custom Query JSON
+
+**Example:** edit the DSL JSON in search's callback
+
+```
+User::search('should', function($elasticsearch, &$query){
+    print_r($query); // Show the DSL JSON
+
+    // ... edit the $query.
+
 })->where(...)->get();
 
-//JSON
+//print JSON
 {
     "bool": {
         "should": [
@@ -231,9 +249,10 @@ User::search()->where('created_at', 'range', [
     }
 }
 ```
+
 #### where(string $column, mixed $value);
 
-It equal to `where($field, '=', $value);`
+It equals to `where($field, '=', $value);`
 
 #### where(Closure $nestedWhere, $boolOccur = 'must')
 
@@ -247,11 +266,12 @@ It equal to `where($field, '=', $value);`
 
 ```php
 // like SQL: WHERE `name` = 'admin' AND (`gender` is null or `gender` = 'female')
+
 User::search()
 ->where('name', 'admin')
 ->where(function($query){
     $query->where('gender', 'female')
-    ->where('gender', 'exists', '');
+    ->whereExists('gender');  // or where('gender' , 'exists', '');
 }, 'should');
 
 //JSON
@@ -284,7 +304,7 @@ User::search()
 
 #### whereNot(string $column, string $operator = null, mixed $value = null, array $options = [])
 
-It equal to `where(Closure, 'must_not')`
+It equals to `where(Closure, 'must_not')`
 
 **Example 1**
 
@@ -323,6 +343,12 @@ User::search()->where(function($query){
   ->where('gender', 'female');
 }, 'must_not')->get();
 
+// the same as above
+User::search()->whereNot(function($query){
+  $query->where('name', 'admin')
+  ->where('gender', 'female');
+})->get();
+
 //JSON
 {
     "bool": {
@@ -346,13 +372,37 @@ User::search()->where(function($query){
     }
 }
 ```
+
 #### whereIn(string $column, array $value)
 
-It equal to `where($column, 'in', $value)`
+It equals to `where($column, 'in', $value)`
+
+#### whereExists(string $column)
+
+It equals to `where($column, 'exists', '')`
+
+Like SQL: `where `$column` is null`
 
 #### whereNotIn(string $column, array $value)
 
-It equal to `whereNot($column, 'in', $value)`
+It equals to `whereNot($column, 'in', $value)`
+
+#### whereAll(string $value)
+
+Search $value in all fileds.
+
+```
+// JSON
+{
+	'match': {
+		'_all': {
+			'query': $value,
+			'fuzziness': 1,
+		}
+	}
+}
+```
+
 
 #### orderBy(string $column, string $direction = 'asc', $mode = null, $options = [])
 - $column [string]:
@@ -432,6 +482,7 @@ Use::search()->where(...)->get(['name', 'gender', 'created_at']);
 ```
 
 #### keys()
+
 Make all records's id to an array
 
 **Example**
@@ -451,6 +502,10 @@ User::search()->paginate(25);
 // page 4
 User::search()->paginate(25, ['*'], 'page', 4);
 ```
+
+#### take(int $limit)
+
+Like Model's take(1000);
 
 #### setAggs(array $aggs)
 
@@ -477,7 +532,7 @@ User::search()->setAggs($aggs)->aggregations('distinct_uid.value');
 
   default: null
 
-  if defined, use `array_get($returnData, $key)`` to find value
+  if defined, use `array_get($returnData, $key)` to find value
 
 **Example**
 
@@ -516,4 +571,4 @@ Logstash can read and parse it;
 was written by [Colin Viebrock](http://viebrock.ca), [Fly](https://www.load-page.com/base/manual) and is released under the
 [MIT License](LICENSE.md).
 
-Copyright (c) 2016-2017
+Copyright (c) 2016-2018

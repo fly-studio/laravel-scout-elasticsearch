@@ -6,16 +6,16 @@ namespace Addons\Elasticsearch\Scout;
  * Class Indexable
  * @package Addons\Elasticsearch\Scout
  */
-trait Indexable
+trait Typeable
 {
 
-    public $hasIndex = null;
+    public $inType = null;
 
     /**
      * @param bool $includeBody
      * @return array
      */
-    public function getEsParams($includeBody = false)
+    protected function getEsParams($includeBody = false)
     {
         $params = [
             'index' => app('elasticsearch')->getConfig('index'),
@@ -31,57 +31,62 @@ trait Indexable
     /**
      * @throws \Exception
      */
-    public function checkDocument()
+    protected function checkDocument()
     {
         if (!$this->exists) {
             throw new \Exception('Document does not exist.');
         }
     }
 
-
     /**
      * @return array|bool|null
      */
-    public function hasIndex()
+    public function inType()
     {
         $this->checkDocument();
-        if (is_null($this->hasIndex)) {
-            $this->hasIndex = app('elasticsearch')->connection()->exists($this->getEsParams());
-        }
-        return $this->hasIndex;
+
+        if (is_null($this->inType))
+            $this->inType = app('elasticsearch')->connection()->exists($this->getEsParams());
+
+        return $this->inType;
     }
 
 
     /**
      * @return array
      */
-    public function addToIndex()
+    public function addToType()
     {
         $this->checkDocument();
-        if (!$this->hasIndex()) {
-            $this->hasIndex = null;
+
+        if (!$this->inType())
+        {
+            $this->inType = null;
             return app('elasticsearch')->connection()->index($this->getEsParams(true));
         }
-        return $this->updateIndex();
+
+        return $this->updateToType();
     }
 
     /**
      * @return array
      */
-    public function reindex()
+    public function resetToType()
     {
-        $this->removeFromIndex();
-        return $this->addToIndex();
+        $this->removeFromType();
+        return $this->addToType();
     }
 
     /**
      * @return array|null
      */
-    public function removeFromIndex()
+    public function removeFromType()
     {
         $this->checkDocument();
-        if ($this->hasIndex()) {
-            $this->hasIndex = false;
+
+        if ($this->inType())
+        {
+            $this->inType = false;
             return app('elasticsearch')->connection()->delete($this->getEsParams());
         }
         return null;
@@ -91,11 +96,13 @@ trait Indexable
     /**
      * @return array
      */
-    public function updateIndex()
+    public function updateToType()
     {
         $this->checkDocument();
-        if ($this->hasIndex()) {
-            $this->hasIndex = null;
+
+        if ($this->inType())
+        {
+            $this->inType = null;
             $params = $this->getEsParams(true);
             $body = $params['body'];
             $params['body'] = [
@@ -103,6 +110,7 @@ trait Indexable
             ];
             return app('elasticsearch')->connection()->update($params);
         }
-        return $this->addToIndex();
+
+        return $this->addToType();
     }
 }

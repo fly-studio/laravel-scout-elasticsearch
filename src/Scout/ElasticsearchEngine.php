@@ -231,10 +231,12 @@ class ElasticsearchEngine {
 			$query['from'] = $options['from'];
 
 		if ($builder->callback) {
-			return call_user_func(
+			call_user_func_array(
 				$builder->callback,
-				$this->elasticsearch,
-				$query
+				[
+					$this->elasticsearch,
+					&$query,
+				]
 			);
 		}
 		return $this->elasticsearch->search($query);
