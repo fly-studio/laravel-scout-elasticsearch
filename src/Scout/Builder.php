@@ -6,6 +6,8 @@ use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 //see Laravel\Scout\Builder
 class Builder extends \Laravel\Scout\Builder {
