@@ -1,12 +1,25 @@
 # Laravel-Elasticsearch
 
-An easy way to use the official Elastic Search client in your Laravel 5.
+An easy way to use the official Elastic Search 5.x~6.x client in your Laravel 5.
 
+# Version
+
+- addons/elasticsearch:1.0
+  - Elasticsearch 5.x
+  - Laravel/Scout 2.0
+  - Laravel 5.1~5.5
+- addons/elasticsearch:2.0
+  - Elasticsearch 5.x
+  - Laravel/Scout 3.0
+  - Laravel 5.1~5.6
+- addons/elasticsearch:3.0
+  - Elasticsearch 6.x
+  - Laravel/Scout 3.0
+  - Laravel 5.1~5.6
 
 * [Installation and Configuration](#installation-and-configuration)
 * [Usage](#usage)
 * [Copyright and License](#copyright-and-license)
-
 
 
 ## Installation and Configuration
@@ -15,11 +28,14 @@ Install the `addons/elasticsearch` package via composer:
 
 ```shell
 composer require addons/elasticsearch
+
+# If you use Elasticsearch 5.x
+composer require addons/elasticsearch:2.0.1
 ```
 
 ### Laravel
 
-> If you used laravel 5.5+, execute `php artisan package:discover` only. no need to add the providers to `config/app.php`.
+> If you used laravel 5.5+, execute `php artisan package:discover` only. no need to add these providers to `config/app.php`.
 
 Add the service provider and facade to `config/app.php`:
 
@@ -77,7 +93,7 @@ class User extends Model {
 }
 ```
 
-#### CRUD of the record of Model 
+#### CRUD of the record of Model
 
 Normally, your laravel/queue was enabled, and the database will automatic crud to the elasticsearch.
 Of course, you can manual it.
