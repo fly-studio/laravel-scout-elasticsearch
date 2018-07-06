@@ -2,7 +2,7 @@
 
 An easy way to use the official Elastic Search 5.x~6.x client in your Laravel 5.
 
-**Warning:** This Manual is for **addons/elasticsearch:3.0.0**, **Elasticsearch 6.x**. If you use the Elasticsearch 5.x, Please visit [2.0.1](tree/2.0.1)
+**Warning:** This Manual is for **addons/elasticsearch:3.0.0**, **Elasticsearch 6.x**. If you use the Elasticsearch 5.x, Please visit [2.0.1](https://github.com/fly-studio/laravel-scout-elasticsearch/tree/2.0.1)
 
 * [Version](#version)
 * [Difference](#difference)
