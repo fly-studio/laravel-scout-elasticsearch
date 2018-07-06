@@ -2,6 +2,8 @@
 
 namespace Addons\Elasticsearch\Scout;
 
+use Laravel\Scout\ModelObserver;
+use Laravel\Scout\SearchableScope;
 use Addons\Elasticsearch\Scout\Builder;
 use Laravel\Scout\Searchable as BaseSearchable;
 
@@ -34,20 +36,35 @@ trait Searchable {
 	}
 
 	/**
-     * Make all instances of the model searchable.
-     *
-     * @return void
-     */
-    public static function makeAllSearchable($min = 0, $max = 0)
-    {
-        $self = new static();
+	 * Boot the trait.
+	 *
+	 * @return void
+	 */
+	public static function bootSearchable()
+	{
+		static::addGlobalScope(new SearchableScope);
 
-        $builder = $self->newQuery();
-        if (!empty($min)) $builder->where($self->getKeyName(), '>=', $min);
-        if (!empty($max) && $max >= $min) $builder->where($self->getKeyName(), '<=', $max);
+		if (!config('scout.disable_observer', false))
+			static::observe(new ModelObserver);
 
-        $builder->orderBy($self->getKeyName())
-            ->searchable();
-    }
+		(new static)->registerSearchableMacros();
+	}
+
+	/**
+	 * Make all instances of the model searchable.
+	 *
+	 * @return void
+	 */
+	public static function makeAllSearchable($min = 0, $max = 0)
+	{
+		$self = new static();
+
+		$builder = $self->newQuery();
+		if (!empty($min)) $builder->where($self->getKeyName(), '>=', $min);
+		if (!empty($max) && $max >= $min) $builder->where($self->getKeyName(), '<=', $max);
+
+		$builder->orderBy($self->getKeyName())
+			->searchable();
+	}
 
 }
