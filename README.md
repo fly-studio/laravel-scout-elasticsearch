@@ -4,17 +4,17 @@ An easy way to use the official Elastic Search 5.x~6.x client in your Laravel 5.
 
 # Version
 
-- addons/elasticsearch:1.0
+- addons/elasticsearch:1.0.2
   - Elasticsearch 5.x
-  - Laravel/Scout 2.0
+  - Laravel/Scout 3.0
   - Laravel 5.1~5.5
-- addons/elasticsearch:2.0
+- addons/elasticsearch:2.0.1
   - Elasticsearch 5.x
-  - Laravel/Scout 3.0
+  - Laravel/Scout 3.0~4.0
   - Laravel 5.1~5.6
-- addons/elasticsearch:3.0
+- addons/elasticsearch:3.0.0
   - Elasticsearch 6.x
-  - Laravel/Scout 3.0
+  - Laravel/Scout 4.0
   - Laravel 5.1~5.6
 
 * [Installation and Configuration](#installation-and-configuration)
