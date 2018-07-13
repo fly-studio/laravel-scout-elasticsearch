@@ -35,7 +35,7 @@ Elasticsearch 6.0 removes(deprecats) the TYPE. (like database's table)
 
 So We use the ES's index named `env('SCOUT_PREFIX').$mode->getTable()` for each table
 
-eg:
+**eg:**
 
 .env
 ```

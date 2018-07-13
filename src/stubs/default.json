@@ -1,0 +1,166 @@
+{
+    "body": {
+        "settings": {
+            "analysis": {
+                "analyzer": {
+                    "title_standard": {
+                        "type": "custom",
+                        "tokenizer": "standard",
+                        "filter": [
+                            "lowercase",
+                            "asciifolding",
+                            "f_ngram",
+                            "unique"
+                        ]
+                    },
+                    "title_search_standard": {
+                        "type": "custom",
+                        "tokenizer": "standard",
+                        "filter": [
+                            "lowercase",
+                            "asciifolding",
+                            "unique"
+                        ]
+                    },
+                    "path": {
+                        "type": "custom",
+                        "tokenizer": "path_hierarchy"
+                    },
+                    "url": {
+                        "type": "custom",
+                        "tokenizer": "uax_url_email"
+                    },
+                    "email": {
+                        "type": "custom",
+                        "tokenizer": "uax_url_email",
+                        "filter": [
+                            "lowercase",
+                            "unique"
+                        ]
+                    }
+                },
+                "filter": {
+                    "f_ngram": {
+                        "type": "edgeNGram",
+                        "min_gram": 2,
+                        "max_gram": 25,
+                        "side": "front"
+                    },
+                    "f_word_delimiter": {
+                        "type": "word_delimiter",
+                        "split_on_numerics": true,
+                        "split_on_case_change": true,
+                        "generate_word_parts": true,
+                        "generate_number_parts": true,
+                        "catenate_words": true,
+                        "catenate_numbers": true,
+                        "catenate_all": true,
+                        "preserve_original": true
+                    }
+                }
+            }
+        },
+        "mappings": {
+            "_doc": {
+                "dynamic_templates": [
+                    {
+                        "keywords": {
+                            "match_pattern": "regex",
+                            "match_mapping_type": "string",
+                            "match": "^.*?_type$",
+                            "mapping": {
+                                "type": "keyword"
+                            }
+                        }
+                    },
+                    {
+                        "whole_words": {
+                            "match_pattern": "regex",
+                            "match_mapping_type": "string",
+                            "match": "^(name|username|account)$",
+                            "mapping": {
+                                "type": "text",
+                                "search_analyzer": "title_search_standard",
+                                "analyzer": "title_standard"
+                            }
+                        }
+                    },
+                    {
+                        "phones": {
+                            "match_mapping_type": "string",
+                            "match": "*phone",
+                            "mapping": {
+                                "type": "text",
+                                "search_analyzer": "title_search_standard",
+                                "analyzer": "title_standard"
+                            }
+                        }
+                    },
+                    {
+                        "dates": {
+                            "match_mapping_type": "string",
+                            "match": "*_at",
+                            "mapping": {
+                                "type": "date",
+                                "format": "yyy-MM-dd HH:mm:ss||yyyy-MM-dd||HH:mm:ss"
+                            }
+                        }
+                    },
+                    {
+                        "timestamp": {
+                            "match_mapping_type": "long",
+                            "match": "*_at",
+                            "mapping": {
+                                "type": "date",
+                                "format": "seconds-since-the-epoch||milliseconds-since-the-epoch"
+                            }
+                        }
+                    },
+                    {
+                        "urls": {
+                            "match_pattern": "regex",
+                            "match_mapping_type": "string",
+                            "match": "^.*?(mail|link|url)s?$",
+                            "mapping": {
+                                "type": "text",
+                                "search_analyzer": "url",
+                                "analyzer": "url"
+                            }
+                        }
+                    },
+                    {
+                        "paths": {
+                            "match_pattern": "regex",
+                            "match_mapping_type": "string",
+                            "match": "^.*?(path)s?$",
+                            "mapping": {
+                                "type": "text",
+                                "analyzer": "path"
+                            }
+                        }
+                    },
+                    {
+                        "ips": {
+                            "match_pattern": "regex",
+                            "match_mapping_type": "string",
+                            "match": "^(ip|ip_address|ip_addr)$",
+                            "mapping": {
+                                "type": "ip"
+                            }
+                        }
+                    },
+                    {
+                        "locations": {
+                            "match_pattern": "regex",
+                            "match_mapping_type": "*",
+                            "match": "^(location|point|coordinate)$",
+                            "mapping": {
+                                "type": "geo_point"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

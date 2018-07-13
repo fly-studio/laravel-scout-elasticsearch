@@ -10,7 +10,7 @@ use Laravel\Scout\Searchable as BaseSearchable;
 trait Searchable {
 
 	use BaseSearchable;
-	use Typeable;
+	use Indexable;
 
 	/**
 	 * Perform a search against the model's indexed data.

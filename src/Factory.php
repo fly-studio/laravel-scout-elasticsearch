@@ -62,9 +62,12 @@ class Factory
             $logPath = array_get($config, 'logPath');
             $logLevel = array_get($config, 'logLevel');
 
-            if (!empty($logObject) && $logObject instanceof LoggerInterface) {
+            if (!empty($logObject) && $logObject instanceof LoggerInterface)
+            {
                 $clientBuilder->setLogger($logObject);
-            } else if ($logPath && $logLevel) {
+            }
+            else if ($logPath && $logLevel)
+            {
                 $logObject = ClientBuilder::defaultLogger($logPath, $logLevel);
                 $clientBuilder->setLogger($logObject);
             }
@@ -72,8 +75,8 @@ class Factory
 
         // Set additional client configuration
 
-        foreach ($this->configMappings as $key => $method) {
-
+        foreach ($this->configMappings as $key => $method)
+        {
             $value = array_get($config, $key);
 
             if (!is_null($value))

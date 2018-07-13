@@ -28,13 +28,7 @@ return [
             'hosts' => [
                 'localhost:9200',
             ],
-            /**
-             * Index
-             * same as Scout's index
-             * eg: same as your database's name
-             * 
-             */
-            'index' => env('ELASTICSEARCH_INDEX', 'laravel'),
+
             /**
              * SSL
              *
@@ -62,7 +56,7 @@ return [
              * setting 'logObject' to an instance of Psr\Log\LoggerInterface or 'monolog'.  In fact,
              * if you just want to use the default Laravel logger, then set 'logObject' to 'monolog'
              *
-             * but in Laravel 5.3, it's error 
+             * but in Laravel 5.3, it's error
              *
              * Note: 'logObject' takes precedent over 'logPath'/'logLevel', so set
              * 'logObject' null if you just want file-based logging to a custom path.
@@ -77,7 +71,7 @@ return [
             /**
              * Logstash's driver
              * value: redis, file, elasticsearch
-             * 
+             *
              * Logstash's config like:
              * [file]
              * input{
@@ -87,7 +81,7 @@ return [
              *         }
              *     }
              * }
-             * 
+             *
              * [redis]
              * input {
              *     redis {

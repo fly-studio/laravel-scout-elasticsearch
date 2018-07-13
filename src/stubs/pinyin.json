@@ -1,0 +1,59 @@
+{
+    "body": {
+        "settings": {
+            "analysis": {
+                "analyzer": {
+                	"pinyin_standard": {
+                        "type": "custom",
+                        "tokenizer": "t_pinyin",
+                        "filter": [
+                            "unique"
+                        ]
+                    }
+                },
+                "tokenizer": {
+                    "t_pinyin": {
+                        "type": "pinyin",
+                        "keep_first_letter": true,
+                        "keep_separate_first_letter": false,
+                        "keep_full_pinyin": false,
+                        "keep_joined_full_pinyin": true,
+                        "keep_original": true,
+                        "limit_first_letter_length": 25,
+                        "lowercase": true
+                    }
+                },
+                "filter": {
+                    "f_pinyin": {
+                        "type": "pinyin",
+                        "keep_first_letter": true,
+                        "keep_separate_first_letter": false,
+                        "keep_full_pinyin": false,
+                        "keep_joined_full_pinyin": true,
+                        "keep_original": true,
+                        "limit_first_letter_length": 25,
+                        "lowercase": true
+                    }
+                }
+            }
+        },
+        "mappings": {
+            "_doc": {
+                "dynamic_templates": [
+                	{
+                        "pinyin": {
+                            "match_pattern": "regex",
+                            "match_mapping_type": "string",
+                            "match": "",
+                            "mapping": {
+                                "type": "text",
+                                "search_analyzer": "pinyin_standard",
+                                "analyzer": "pinyin_standard"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

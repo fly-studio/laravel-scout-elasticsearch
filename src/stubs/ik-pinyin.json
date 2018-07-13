@@ -1,0 +1,40 @@
+{
+    "body": {
+        "settings": {
+            "analysis": {
+                "analyzer": {
+                    "ik_smart_pinyin": {
+                        "type": "custom",
+                        "tokenizer": "ik_max_word",
+                        "filter": [
+                            "f_pinyin",
+                            "f_ngram",
+                            "unique"
+                        ],
+                        "char_filter": [
+                            "html_strip"
+                        ]
+                    }
+                }
+            }
+        },
+        "mappings": {
+            "_doc": {
+                "dynamic_templates": [
+                    {
+                        "ik_pinyin": {
+                            "match_pattern": "regex",
+                            "match_mapping_type": "string",
+                            "match": "",
+                            "mapping": {
+                                "type": "text",
+                                "search_analyzer": "ik_smart_pinyin",
+                                "analyzer": "ik_smart_pinyin"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
