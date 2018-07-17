@@ -13,14 +13,16 @@ class ImportRangeCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'scout:import-range {model} {--min=0 : (number) the min ID, negative number is valid, 0 for the first ID} {--max=0: (number) the max ID, 0 for the last ID}';
+    protected $signature = 'scout:import-range {model}
+                {--min=0 : (number) the min ID, negative number is valid, 0 for the first ID}
+                {--max=0: (number) the max ID, 0 for the last ID}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Import the given model of range into the search index';
+    protected $description = 'Import the model with ID-Range into the ES index';
 
     /**
      * Execute the console command.
@@ -33,6 +35,9 @@ class ImportRangeCommand extends Command
         $class = $this->argument('model');
 
         $model = new $class;
+
+        if (!$model->shouldBeSearchable())
+            return $this->error('The '.$class.'::shouldBeSearchable() returns false. Nothing to do.');
 
         $min = $this->option('min');
         $max = $this->option('max');
@@ -47,6 +52,8 @@ class ImportRangeCommand extends Command
         });
 
         $model::makeAllSearchable($min, $max);
+
+        $events->forget(ModelsImported::class);
 
         $this->info('All ['.$class.'] records from '.$min.'-'.$max.' have been imported.');
     }

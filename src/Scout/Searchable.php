@@ -2,9 +2,12 @@
 
 namespace Addons\Elasticsearch\Scout;
 
+use Carbon\Carbon;
 use Laravel\Scout\ModelObserver;
 use Laravel\Scout\SearchableScope;
 use Addons\Elasticsearch\Scout\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Addons\Elasticsearch\Scout\MakeSearchable;
 use Laravel\Scout\Searchable as BaseSearchable;
 
 trait Searchable {
@@ -28,7 +31,7 @@ trait Searchable {
 	 * @param Closure        $callback
 	 * @return \Addons\Elasticsearch\Scout\Builder
 	 */
-	public static function search($boolOccur = 'must', $callback = null)
+	public static function search(string $boolOccur = 'must', callable $callback = null)
 	{
 		$builder = new Builder(new static, $callback);
 		$builder->setBool($boolOccur);
@@ -44,8 +47,8 @@ trait Searchable {
 	{
 		static::addGlobalScope(new SearchableScope);
 
-		if (!config('scout.disable_observer', false))
-			static::observe(new ModelObserver);
+		if (($observer = config('scout.observer', false)) !== false)
+			static::observe(new $observer);
 
 		(new static)->registerSearchableMacros();
 	}
@@ -59,12 +62,52 @@ trait Searchable {
 	{
 		$self = new static();
 
+		$softDeletes = in_array(SoftDeletes::class, class_uses_recursive(get_called_class())) &&
+						config('scout.soft_delete', false);
+
 		$builder = $self->newQuery();
+
 		if (!empty($min)) $builder->where($self->getKeyName(), '>=', $min);
 		if (!empty($max) && $max >= $min) $builder->where($self->getKeyName(), '<=', $max);
 
-		$builder->orderBy($self->getKeyName())
-			->searchable();
+		$builder->when($softDeletes, function ($query) {
+			$query->withTrashed();
+		})->orderBy($self->getKeyName())->searchable();
+	}
+
+	/**
+	 * Dispatch the job to make the given models searchable.
+	 *
+	 * @param  \Illuminate\Database\Eloquent\Collection  $models
+	 * @return void
+	 */
+	public function queueMakeSearchable($models)
+	{
+		if ($models->isEmpty()) {
+			return;
+		}
+
+		if (! config('scout.queue'))
+		{
+			$models->loadMissing($models->first()->searchableWith());
+
+			return $models->first()->searchableUsing()->update($models);
+		}
+
+		dispatch((new MakeSearchable($models))
+				->onQueue($models->first()->syncWithSearchUsingQueue())
+				->delay($models->first()->syncWithSearchableDelay())
+				->onConnection($models->first()->syncWithSearchUsing()));
+	}
+
+	public function searchableWith()
+	{
+		return [];
+	}
+
+	public function syncWithSearchableDelay()
+	{
+		return config('scout.queue.delay', Carbon::now());
 	}
 
 }

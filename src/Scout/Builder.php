@@ -158,12 +158,12 @@ class Builder extends \Laravel\Scout\Builder {
 	public $bool = null;
 
 	/**
-     * The "aggs" constraints added to the body.
-     * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html
-     *
-     * @var array
-     */
-    public $aggs = null;
+	 * The "aggs" constraints added to the body.
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html
+	 *
+	 * @var array
+	 */
+	public $aggs = null;
 
 	/**
 	 * The "limit" that should be applied to the search.
@@ -171,6 +171,13 @@ class Builder extends \Laravel\Scout\Builder {
 	 * @var int
 	 */
 	public $limit = null;
+
+	/**
+	 * The "offset" that should be applied to the search.
+	 *
+	 * @var int
+	 */
+	public $offset = 0;
 
 	/**
 	 * The "order" that should be applied to the search.
@@ -231,6 +238,19 @@ class Builder extends \Laravel\Scout\Builder {
 	}
 
 	/**
+	 * Set the "offset" for the search query.
+	 *
+	 * @param  int  $offset
+	 * @return $this
+	 */
+	public function offset($offset)
+	{
+		$this->offset = $offset;
+
+		return $this;
+	}
+
+	/**
 	 * Get the keys of search results.
 	 *
 	 * @return \Illuminate\Support\Collection
@@ -270,11 +290,10 @@ class Builder extends \Laravel\Scout\Builder {
 		return $this;
 	}
 
-	public function get(array $columns = ['*'], bool $existsInDB = false)
+	public function get(array $columns = ['*'])
 	{
 		$this->set_source($columns);
-		!is_null($this->limit) && $this->take(2000);
-		return $this->engine()->get($this, $existsInDB);
+		return $this->engine()->get($this);
 	}
 
 	/**
@@ -330,7 +349,7 @@ class Builder extends \Laravel\Scout\Builder {
 	 * @param  int|null  $page
 	 * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
 	 */
-	public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, bool $existsInDB = false)
+	public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null)
 	{
 		$this->_source = $columns;
 
@@ -338,7 +357,7 @@ class Builder extends \Laravel\Scout\Builder {
 
 		$perPage = $perPage ?: $this->model->getPerPage();
 
-		return $this->engine()->paginate($this, $perPage, $pageName, $page, $existsInDB);
+		return $this->engine()->paginate($this, $perPage, $pageName, $page);
 	}
 
 	/**
@@ -350,7 +369,7 @@ class Builder extends \Laravel\Scout\Builder {
 	 * @param string       $boolOccur    [must]|should|filter|must_not
 	 * @param Collection   $wheres       the where's array
 	 */
-	public function setBool($boolOccur = 'must', Collection $bool = null)
+	public function setBool(string $boolOccur = 'must', Collection $bool = null)
 	{
 		is_null($bool) && $bool = new Collection();
 		//create [bool][must]
@@ -392,11 +411,11 @@ class Builder extends \Laravel\Scout\Builder {
 
 
 	/**
-     * The "aggs" constraints added to the body.
-     * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html
-     *
-     * @param array
-     */
+	 * The "aggs" constraints added to the body.
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html
+	 *
+	 * @param array
+	 */
 	public function setAggs($aggs)
 	{
 		$this->aggs = $aggs;

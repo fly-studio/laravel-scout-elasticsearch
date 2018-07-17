@@ -2,13 +2,12 @@
 
 namespace Addons\Elasticsearch\Scout;
 
+use Addons\Elasticsearch\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Model;
 use Addons\Elasticsearch\Scout\Builder;
 use Elasticsearch\Client as Elasticsearch;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection as BaseCollection;
 
 class ElasticsearchEngine {
 
@@ -38,7 +37,7 @@ class ElasticsearchEngine {
 	 */
 	public function update($models)
 	{
-		$body = new BaseCollection();
+		$body = new Collection();
 
 		$models->each(function ($model) use ($body) {
 			$array = $model->toSearchableArray();
@@ -50,6 +49,7 @@ class ElasticsearchEngine {
 			$body->push([
 				'index' => [
 					'_index' => $model->searchableAs(),
+					'_type' => '_doc',
 					'_id' => $model->getKey(),
 				],
 			]);
@@ -71,12 +71,13 @@ class ElasticsearchEngine {
 	 */
 	public function delete($models)
 	{
-		$body = new BaseCollection();
+		$body = new Collection();
 
 		$models->each(function ($model) use ($body) {
 			$body->push([
 				'delete' => [
 					'_index' => $model->searchableAs(),
+					'_type' => '_doc',
 					'_id'  => $model->getKey(),
 				],
 			]);
@@ -96,7 +97,7 @@ class ElasticsearchEngine {
 	 */
 	public function execute(Builder $query)
 	{
-		return $this->performSearch($query, !is_null($query->limit) ? ['size' => $query->limit] : []);
+		return $this->performSearch($query, !is_null($query->limit) ? ['size' => $query->limit, 'from' => $query->offset] : []);
 	}
 
 	/**
@@ -128,9 +129,9 @@ class ElasticsearchEngine {
 	 * @param  Addons\ElasticSearch\Scout\Builder  $builder
 	 * @return \Illuminate\Database\Eloquent\Collection
 	 */
-	public function get(Builder $builder, bool $existsInDB = false) : Collection
+	public function get(Builder $builder) : Collection
 	{
-		return $this->map($this->execute($builder), $builder->model, $existsInDB);
+		return $this->map($this->execute($builder), $builder->model);
 	}
 
 	/**
@@ -155,7 +156,7 @@ class ElasticsearchEngine {
 	 * @param  int  $page
 	 * @return mixed
 	 */
-	public function paginate(Builder $builder, int $perPage = null, string $pageName = 'page', $page = null, bool $existsInDB = false) : LengthAwarePaginator
+	public function paginate(Builder $builder, int $perPage = null, string $pageName = 'page', $page = null) : LengthAwarePaginator
 	{
 		$result = $this->performSearch($builder, [
 			'size' => $perPage,
@@ -164,7 +165,7 @@ class ElasticsearchEngine {
 
 		//$result['nbPages'] = (int) ceil($result['hits']['total'] / $perPage);
 
-		return (new LengthAwarePaginator($this->map($result, $builder->model, $existsInDB), $this->getTotalCount($result), $perPage, $page, [
+		return (new LengthAwarePaginator($this->map($result, $builder->model), $this->getTotalCount($result), $perPage, $page, [
 			'path' => Paginator::resolveCurrentPath(),
 			'pageName' => $pageName,
 		]));
@@ -242,38 +243,14 @@ class ElasticsearchEngine {
 	 * @param  \Illuminate\Database\Eloquent\Model  $model
 	 * @return Collection
 	 */
-	public function map($results, Model $model, bool $existsInDB = false) : Collection
+	protected function map($results, Model $model) : Collection
 	{
-		if (count($results['hits']) === 0) {
+		if (count($results['hits']) === 0)
 			return Collection::make();
-		}
 
-		if ($existsInDB)
-		{
-			$keys = collect($results['hits']['hits'])
-				->pluck('_id')
-				->map(function($v){
-					return ($pos = strpos($v, ':')) !== false ? substr($v, 0, $pos) : $v;
-				})->values()
-				->all();
-
-			$models = $model->whereIn(
-				$model->getQualifiedKeyName(), $keys
-			)->get()->keyBy($model->getKeyName());
-
-			return Collection::make($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
-					return isset($models[$hit['_source'][$model->getKeyName()]])
-											? $models[$hit['_source'][$model->getKeyName()]] : null;
-			})->filter()->values();
-
-		} else {
-
-			$newModel = new $model;
-			$newModel->setDateFormat(\DateTime::W3C);
-			return Collection::make($results['hits']['hits'])->map(function ($hit) use ($newModel) {
-					return (clone $newModel)->forceFill($hit['_source'])->syncOriginal();
-			})->filter()->values();
-		}
+		return Collection::make($results['hits']['hits'])->map(function ($hit) {
+				return $hit['_source'];
+		})->setModelName($model);
 	}
 
 	/**
@@ -283,13 +260,17 @@ class ElasticsearchEngine {
 	 * @param  mixed  $results
 	 * @return \Illuminate\Support\Collection
 	 */
-	public function getIds($results) {
+	public function getIds($results) : array
+	{
 
-		return collect($results['hits']['hits'])
-						->pluck('_id')
-						->values()
-						->all();
-
+		return Collection::make($results['hits']['hits'])
+						->map(function($v) {
+							if (is_numeric($v['_id']))
+								$id = $v['_id'];
+							else
+								list($id) = explode(':', $v['_id'], 2);
+							return $id;
+						})->all();
 	}
 
 	/**
