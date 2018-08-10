@@ -330,7 +330,7 @@ class Builder extends \Laravel\Scout\Builder {
 	 */
 	public function execute()
 	{
-		return $this->engine()->execute();
+		return $this->engine()->execute($this);
 	}
 
 	/**
