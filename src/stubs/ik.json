@@ -1,38 +1,36 @@
 {
-    "body": {
-        "settings": {
-            "analysis": {
-                "analyzer": {
-                    "ik_smart_standard": {
-                        "type": "custom",
-                        "tokenizer": "ik_max_word",
-                        "filter": [
-                            "unique"
-                        ],
-                        "char_filter": [
-                            "html_strip"
-                        ]
-                    }
+    "settings": {
+        "analysis": {
+            "analyzer": {
+                "ik_smart_standard": {
+                    "type": "custom",
+                    "tokenizer": "ik_max_word",
+                    "filter": [
+                        "unique"
+                    ],
+                    "char_filter": [
+                        "html_strip"
+                    ]
                 }
             }
-        },
-        "mappings": {
-            "_doc": {
-                "dynamic_templates": [
-                    {
-                        "ik": {
-                            "match_pattern": "regex",
-                            "match_mapping_type": "string",
-                            "match": "",
-                            "mapping": {
-                                "type": "text",
-                                "search_analyzer": "ik_smart_standard",
-                                "analyzer": "ik_smart_standard"
-                            }
+        }
+    },
+    "mappings": {
+        "_doc": {
+            "dynamic_templates": [
+                {
+                    "ik": {
+                        "match_pattern": "regex",
+                        "match_mapping_type": "string",
+                        "match": "",
+                        "mapping": {
+                            "type": "text",
+                            "search_analyzer": "ik_smart_standard",
+                            "analyzer": "ik_smart_standard"
                         }
                     }
-                ]
-            }
+                }
+            ]
         }
     }
 }

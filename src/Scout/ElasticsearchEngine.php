@@ -35,7 +35,7 @@ class ElasticsearchEngine {
 	 * @param  Collection  $models
 	 * @return void
 	 */
-	public function update($models)
+	public function update($models, bool $refresh = true)
 	{
 		$body = new Collection();
 
@@ -58,7 +58,7 @@ class ElasticsearchEngine {
 		});
 
 		$this->elasticsearch->bulk([
-			'refresh' => true,
+			'refresh' => $refresh,
 			'body' => $body->all(),
 		]);
 	}
@@ -69,7 +69,7 @@ class ElasticsearchEngine {
 	 * @param  Collection  $models
 	 * @return void
 	 */
-	public function delete($models)
+	public function delete($models, bool $refresh = true)
 	{
 		$body = new Collection();
 
@@ -84,7 +84,7 @@ class ElasticsearchEngine {
 		});
 
 		$this->elasticsearch->bulk([
-			'refresh' => true,
+			'refresh' => $refresh,
 			'body' => $body->all(),
 		]);
 	}
@@ -131,7 +131,7 @@ class ElasticsearchEngine {
 	 */
 	public function get(Builder $builder) : Collection
 	{
-		return $this->map($this->execute($builder), $builder->model);
+		return $this->map($this->execute($builder));
 	}
 
 	/**
@@ -165,7 +165,7 @@ class ElasticsearchEngine {
 
 		//$result['nbPages'] = (int) ceil($result['hits']['total'] / $perPage);
 
-		return (new LengthAwarePaginator($this->map($result, $builder->model), $this->getTotalCount($result), $perPage, $page, [
+		return (new LengthAwarePaginator($this->map($result), $this->getTotalCount($result), $perPage, $page, [
 			'path' => Paginator::resolveCurrentPath(),
 			'pageName' => $pageName,
 		]));
@@ -240,17 +240,16 @@ class ElasticsearchEngine {
 	 * Map the given results to instances of the given model.
 	 *
 	 * @param  mixed  $results
-	 * @param  \Illuminate\Database\Eloquent\Model  $model
 	 * @return Collection
 	 */
-	protected function map($results, Model $model) : Collection
+	protected function map($results) : Collection
 	{
 		if (count($results['hits']) === 0)
 			return Collection::make();
 
-		return Collection::make($results['hits']['hits'])->map(function ($hit) {
-				return $hit['_source'];
-		})->setModelName($model);
+		return Collection::make(array_map(function ($hit) {
+			return $hit['_source'];
+		}, $results['hits']['hits']))->asDepthArray();
 	}
 
 	/**

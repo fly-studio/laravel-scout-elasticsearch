@@ -4,11 +4,12 @@ namespace Addons\Elasticsearch\Scout;
 
 use Carbon\Carbon;
 use Laravel\Scout\ModelObserver;
-use Laravel\Scout\SearchableScope;
 use Addons\Elasticsearch\Scout\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Addons\Elasticsearch\Scout\MakeSearchable;
+use Addons\Elasticsearch\Scout\SearchableScope;
 use Laravel\Scout\Searchable as BaseSearchable;
+use Illuminate\Support\Collection as BaseCollection;
 
 trait Searchable {
 
@@ -47,7 +48,7 @@ trait Searchable {
 	{
 		static::addGlobalScope(new SearchableScope);
 
-		if (($observer = config('scout.observer', false)) !== false)
+		if (!empty($observer = config('scout.observer', false)))
 			static::observe(new $observer);
 
 		(new static)->registerSearchableMacros();
@@ -58,7 +59,7 @@ trait Searchable {
 	 *
 	 * @return void
 	 */
-	public static function makeAllSearchable($min = 0, $max = 0)
+	public static function makeAllSearchable($min = 0, $max = 0, bool $refresh = true)
 	{
 		$self = new static();
 
@@ -70,9 +71,30 @@ trait Searchable {
 		if (!empty($min)) $builder->where($self->getKeyName(), '>=', $min);
 		if (!empty($max) && $max >= $min) $builder->where($self->getKeyName(), '<=', $max);
 
-		$builder->when($softDeletes, function ($query) {
-			$query->withTrashed();
-		})->orderBy($self->getKeyName())->searchable();
+		$builder
+			->when($softDeletes, function ($query) {
+				$query->withTrashed();
+			})
+			->orderBy($self->getKeyName())
+			->searchable($refresh);
+	}
+
+	/**
+	 * Register the searchable macros.
+	 *
+	 * @return void
+	 */
+	public function registerSearchableMacros()
+	{
+		$self = $this;
+
+		BaseCollection::macro('searchable', function (bool $refresh = true) use ($self) {
+			$self->queueMakeSearchable($this, $refresh);
+		});
+
+		BaseCollection::macro('unsearchable', function (bool $refresh = true) use ($self) {
+			$self->queueRemoveFromSearch($this, $refresh);
+		});
 	}
 
 	/**
@@ -81,7 +103,7 @@ trait Searchable {
 	 * @param  \Illuminate\Database\Eloquent\Collection  $models
 	 * @return void
 	 */
-	public function queueMakeSearchable($models)
+	public function queueMakeSearchable($models, bool $refresh = true)
 	{
 		if ($models->isEmpty()) {
 			return;
@@ -91,13 +113,28 @@ trait Searchable {
 		{
 			$models->loadMissing($models->first()->searchableWith());
 
-			return $models->first()->searchableUsing()->update($models);
+			return $models->first()->searchableUsing()->update($models, $refresh);
 		}
 
-		dispatch((new MakeSearchable($models))
+		dispatch((new MakeSearchable($models, $refresh))
 				->onQueue($models->first()->syncWithSearchUsingQueue())
 				->delay($models->first()->syncWithSearchableDelay())
 				->onConnection($models->first()->syncWithSearchUsing()));
+	}
+
+	/**
+	 * Dispatch the job to make the given models unsearchable.
+	 *
+	 * @param  \Illuminate\Database\Eloquent\Collection  $models
+	 * @return void
+	 */
+	public function queueRemoveFromSearch($models, bool $refresh = true)
+	{
+		if ($models->isEmpty()) {
+			return;
+		}
+
+		return $models->first()->searchableUsing()->delete($models, $refresh);
 	}
 
 	public function searchableWith()

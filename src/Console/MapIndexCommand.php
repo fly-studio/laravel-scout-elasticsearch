@@ -19,7 +19,6 @@ class MapIndexCommand extends Command {
 
 	public function handle(Dispatcher $events)
 	{
-
 		if (env('SCOUT_DRIVER') != 'elasticsearch')
 			return $this->error('Enable SCOUT_DRIVER=elasticsearch in .env');
 
@@ -50,9 +49,10 @@ class MapIndexCommand extends Command {
 			}
 		}
 
-		$params['index'] = $index_name;
-
-		$e->indices()->create($params);
+		$e->indices()->create([
+			'index' => $index_name,
+			'body' => $params,
+		]);
 
 		$this->info('Create Index Success.');
 	}
@@ -64,7 +64,7 @@ class MapIndexCommand extends Command {
 		{
 			$pinyin = empty($pinyin) ? '^.*?(name|title|alias)$' : '^('.str_replace([',', ' '], ['|', ''], $pinyin).')$';
 			$params = $this->getPy();
-			$params['body']['mappings']['_default_']['dynamic_templates'][0]['pinyin']['match'] = $pinyin;
+			$params['mappings']['_default_']['dynamic_templates'][0]['pinyin']['match'] = $pinyin;
 		}
 		return $params;
 	}
@@ -76,7 +76,7 @@ class MapIndexCommand extends Command {
 		{
 			$ik = empty($ik) ? '^.*?(content|text|description)$' : '^('.str_replace([',', ' '], ['|', ''], $ik).')$';
 			$params = $this->getIk();
-			$params['body']['mappings']['_default_']['dynamic_templates'][0]['ik']['match'] = $ik;
+			$params['mappings']['_default_']['dynamic_templates'][0]['ik']['match'] = $ik;
 		}
 		return $params;
 	}
@@ -89,20 +89,20 @@ class MapIndexCommand extends Command {
 			if ($this->option('pinyin') == 'default') // no pinyin
 			{
 				$pyParams = $this->getPy();
-				unset($pyParams['body']['mappings']);
+				unset($pyParams['mappings']);
 				$params = array_merge_recursive($params, $pyParams);
 			}
 
 			if ($this->option('ik') == 'default') // no ik
 			{
 				$ikParams = $this->getIk();
-				unset($ikParams['body']['mappings']);
+				unset($ikParams['mappings']);
 				$params = array_merge_recursive($params, $ikParams);
 			}
 
 			$ip = empty($ip) ? '^.*?(content|text|description)$' : '^('.str_replace([',', ' '], ['|', ''], $ip).')$';
 			$ipParams = $this->getIkPy();
-			$ipParams['body']['mappings']['_default_']['dynamic_templates'][0]['ik_pinyin']['match'] = $ip;
+			$ipParams['mappings']['_default_']['dynamic_templates'][0]['ik_pinyin']['match'] = $ip;
 			$params = array_merge_recursive($params, $ipParams);
 		}
 		return $params;

@@ -8,6 +8,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Contracts\Support\Arrayable;
 
 // see Laravel\Scout\Builder
 class Builder extends \Laravel\Scout\Builder {
@@ -194,7 +195,11 @@ class Builder extends \Laravel\Scout\Builder {
 	protected $aliasOperators = [
 		'=' => 'term',
 		'in' => 'terms',
-		'like' => 'match',
+		'>' => 'gt',
+		'>=' => 'gte',
+		'<' => 'lt',
+		'<=' => 'lte',
+		'like' => 'wildcard',
 		'mlt' => 'more_like_this',
 	];
 
@@ -281,7 +286,7 @@ class Builder extends \Laravel\Scout\Builder {
 				'order' => strtolower($direction) == 'asc' ? 'asc' : 'desc',
 			] + $options;
 
-			if (!is_null($mode)) $this->orders[$columns] += [
+			if (!is_null($mode)) $this->orders[$column] += [
 				'mode' => $mode,
 			];
 		}
@@ -458,7 +463,7 @@ class Builder extends \Laravel\Scout\Builder {
 	 * });
 	 *
 	 * @param  string|array  $column the field of elastic
-	 * @param  string  $operator     [term],=|terms,in|match,like|multi_match|range|prefix|common|wildcard|regexp|fuzzy|type|match_phrase|match_phrase_prefix|more_like_this|exists
+	 * @param  string  $operator     |[term],=|terms,in|match|multi_match|prefix|common|like,wildcard|regexp|fuzzy|type|match_phrase|match_phrase_prefix|more_like_this|exists|>,gt|>=.gte|<,lt|<=,lte|range|
 	 * @param  string|array          $value
 	 * @param  array  $options      append to each where
 	 * @return $this
@@ -559,13 +564,15 @@ class Builder extends \Laravel\Scout\Builder {
 
 	protected function parseWhere($column, $operator, $value, $options = [])
 	{
-		if (is_null($value) && !is_null($operator)) { //set default operator
+		if (is_null($value) && !is_null($operator)) //set default operator
+		{
 			$value = $operator;
 			$operator = is_array($column) ? 'multi_match' : 'term';
 		}
 		$pointer = $this->boolAppendedPointer;
 
-		if ($column == '_all') { // _all
+		if ($column == '_all') // _all
+		{
 			$pointer[] = [
 				'match' => [
 					'_all' => [
@@ -578,15 +585,16 @@ class Builder extends \Laravel\Scout\Builder {
 		else if (is_array($column) && is_null($value) && is_null($operator)) //array, append data
 		{
 			if (!Arr::isAssoc($column))
-				$pointer->merge($columns);
+				$pointer->merge($column);
 			else
-				$pointer[] = $columns;
+				$pointer[] = $column;
 		}
 		else
 		{
 			$operator = strtolower($operator);
 			isset($this->aliasOperators[$operator]) && $operator = $this->aliasOperators[$operator];
-			$value instanceof Collection && $value = $value->toArray();
+
+			$value instanceof Arrayable && $value = $value->toArray();
 
 			switch ($operator) {
 				//https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-term-query.html
@@ -634,6 +642,18 @@ class Builder extends \Laravel\Scout\Builder {
 					];
 					break;
 				//https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-range-query.html
+				case 'gt':
+				case 'gte':
+				case 'lt':
+				case 'lte':
+					$pointer[] = [
+						'range' => [
+							$column => [
+								$operator => $value,
+							] + $options
+						],
+					];
+					break;
 				case 'range':
 					$pointer[] = [
 						'range' => [
