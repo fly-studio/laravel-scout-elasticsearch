@@ -193,7 +193,7 @@ class ElasticsearchEngine {
 	protected function performCount(Builder $builder, array $options = [])
 	{
 		$query = [
-			'index' =>  $builder->model->searchableAs(),
+			'index' => is_null($builder->index) ? $builder->model->searchableAs() : $builder->index,
 			'type' => '_doc',
 			'body' => $this->parseBody($builder),
 		];
@@ -211,7 +211,7 @@ class ElasticsearchEngine {
 	protected function performSearch(Builder $builder, array $options = [])
 	{
 		$query = [
-			'index' =>  $builder->model->searchableAs(),
+			'index' => is_null($builder->index) ? $builder->model->searchableAs() : $builder->index,
 			'type' => '_doc',
 			'body' => $this->parseBody($builder) + [
 				'sort' => $builder->orders,

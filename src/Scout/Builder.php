@@ -39,7 +39,7 @@ class Builder extends \Laravel\Scout\Builder {
 	 *
 	 * @var string
 	 */
-	public $index;
+	public $index = null;
 
 	/**
 	 * A query that uses a query parser in order to parse its content.
