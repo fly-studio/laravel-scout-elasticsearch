@@ -6,6 +6,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 use Addons\Elasticsearch\Scout\Builder;
+use Addons\Core\Exceptions\OutputResponseException;
+use Elasticsearch\Common\Exceptions\ServerErrorResponseException;
 
 trait ApiTrait {
 
@@ -111,7 +113,15 @@ trait ApiTrait {
 		$filters = $this->_doFilters($request, $builder);
 		$orders = $this->_doOrders($request, $builder);
 
-		$paginate = $builder->paginate($size, $columns, 'page', $page);
+		try {
+			$paginate = $builder->paginate($size, $columns, 'page', $page);
+		} catch (ServerErrorResponseException $e) {
+
+			if (stripos($e->getMessage(), 'Result window is too large') !== false)
+				throw new OutputResponseException('es::exceptions.out_of_page');
+			else
+				throw new OutputResponseException('es::exceptions.ServerErrorResponseException');
+		}
 
 		$query_strings = array_merge_recursive(['f' => $filters], $extra_query);
 		$paginate->appends($query_strings);
@@ -148,10 +158,20 @@ trait ApiTrait {
 
 		$this->_doFilters($request, $builder);
 
-		$paginate = $builder->orderBy($builder->getModel()->getKeyName(),'DESC')->paginate($size, $columns);
+		try {
+
+			$paginate = $builder->orderBy($builder->getModel()->getKeyName(), 'DESC')->paginate($size, $columns);
+
+		} catch (ServerErrorResponseException $e) {
+
+			if (stripos($e->getMessage(), 'Result window is too large') !== false)
+				throw new OutputResponseException('es::exceptions.out_of_page');
+			else
+				throw new OutputResponseException('es::exceptions.ServerErrorResponseException');
+		}
 
 		if (is_callable($callback))
-			call_user_func_array($callback, [&$paginate]);
+			call_user_func_array($callback, [$paginate]);
 
 		$data = $paginate->toArray();
 

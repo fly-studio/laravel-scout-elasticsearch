@@ -3,6 +3,7 @@
 namespace Addons\Elasticsearch;
 
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Database\Eloquent\Collection as ModelCollection;
@@ -15,7 +16,7 @@ class Collection extends BaseCollection {
 		{
 			$r = [];
 			foreach($v as $key => $value)
-				array_set($r, $key, $value);
+				Arr::set($r, $key, $value);
 
 			$this->items[$k] = $r;
 		}
@@ -44,10 +45,10 @@ class Collection extends BaseCollection {
 					$v[$key] = $time === false ? $v[$key] : Carbon::createFromTimestamp($time);
 				}
 
-				$instance->setRawAttributes(array_except($v, $relations));
+				$instance->setRawAttributes(Arr::except($v, $relations));
 
 				foreach($relations as $relation)
-					$instance->setRelation($relation, array_get($v, $relation));
+					$instance->setRelation($relation, Arr::get($v, $relation));
 
 				$results[$k] = $instance;
 			} else {

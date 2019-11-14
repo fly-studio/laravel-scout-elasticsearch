@@ -4,6 +4,7 @@ namespace Addons\Elasticsearch;
 
 use Psr\Log\LoggerInterface;
 use Elasticsearch\ClientBuilder;
+use Addons\Elasticsearch\Namespaces\CustomNamespaceBuilder;
 
 class Factory
 {
@@ -82,6 +83,8 @@ class Factory
             if (!is_null($value))
                 call_user_func([$clientBuilder, $method], $value);
         }
+
+        $clientBuilder->registerNamespace(new CustomNamespaceBuilder());
 
         // Build and return the client
 

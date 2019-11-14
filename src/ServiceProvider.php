@@ -39,6 +39,8 @@ class ServiceProvider extends BaseServiceProvider
 			realpath(__DIR__ . '/../config/elasticsearch.php') => config_path('elasticsearch.php'),
 		]);
 
+		$this->app['translator']->addNamespace('es', realpath(__DIR__.'/../resources/lang/'));
+
 		//the scout/ElasticsearchEngine only supported elasticsearch 2.x, fix it
 		app(\Laravel\Scout\EngineManager::class)->extend('elasticsearch', function(){
 			return new ElasticsearchEngine(
@@ -66,12 +68,8 @@ class ServiceProvider extends BaseServiceProvider
 
 		config('scout.elasticsearch.config.logger') === 'monolog' && config(['scout.elasticsearch.config.logger' => $app->make('log')]);
 
-		$app->singleton('elasticsearch.factory', function($app) {
-			return new Factory();
-		});
-
 		$app->singleton('elasticsearch', function($app) {
-			return new Manager($app, $app['elasticsearch.factory']);
+			return new Manager($app, new Factory());
 		});
 
 		$app->singleton(Client::class, function($app) {
