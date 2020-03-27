@@ -36,7 +36,7 @@ class ElasticsearchEngine {
 	 * @param  Collection  $models
 	 * @return void
 	 */
-	public function update($models, bool $refresh = true)
+	public function update(Collection $models, bool $refresh = true)
 	{
 		$body = new Collection();
 
@@ -70,7 +70,7 @@ class ElasticsearchEngine {
 	 * @param  Collection  $models
 	 * @return void
 	 */
-	public function delete($models, bool $refresh = true)
+	public function delete(Collection $models, bool $refresh = true)
 	{
 		$body = new Collection();
 
@@ -98,7 +98,7 @@ class ElasticsearchEngine {
 	 */
 	public function execute(Builder $query)
 	{
-		return $this->performSearch($query, !is_null($query->limit) ? ['size' => $query->limit, 'from' => $query->offset] : []);
+		return $this->performSearch($query, !is_null($query->getLimit()) ? ['size' => $query->getLimit(), 'from' => $query->getOffset()] : []);
 	}
 
 	/**
@@ -110,6 +110,7 @@ class ElasticsearchEngine {
 	public function count(Builder $query)
 	{
 		$result = $this->performCount($query);
+
 		return isset($result['count']) ? $result['count'] : false;
 	}
 
@@ -146,6 +147,7 @@ class ElasticsearchEngine {
 	public function aggregations(Builder $builder, $key = null)
 	{
 		$result = $this->execute($builder);
+
 		return is_null($key) ? $result['aggregations'] : Arr::get($result['aggregations'], $key);
 	}
 
@@ -166,40 +168,27 @@ class ElasticsearchEngine {
 
 		//$result['nbPages'] = (int) ceil($result['hits']['total'] / $perPage);
 
-		return (new LengthAwarePaginator($this->map($result), $this->getTotalCount($result), $perPage, $page, [
-			'path' => Paginator::resolveCurrentPath(),
-			'pageName' => $pageName,
-		]));
-	}
-
-	private function parseBody(Builder $builder)
-	{
-		$body = [];
-		foreach(['query_string', 'match_all'/*, 'common', '', ''*/] as $var)
-		{
-			if (!is_null($builder->$var))
-			{
-				$body['query'][$var] = $builder->$var;
-				break;
-			}
-		}
-		empty($body['query']) && $body['query'] = $builder->bool->toArray();
-
-		foreach(['_source', 'aggs', 'track_scores', 'stored_fields', 'docvalue_fields', 'highlight', 'rescore', 'explain', 'version', 'indices_boost', 'min_score', 'search_after'] as $var)
-			!is_null($builder->$var) && $body[$var] = $builder->$var;
-
-		return $body;
+		return new LengthAwarePaginator(
+			$this->map($result),
+			$this->getTotalCount($result),
+			$perPage,
+			$page,
+			[
+				'path' => Paginator::resolveCurrentPath(),
+				'pageName' => $pageName,
+			]
+		);
 	}
 
 	protected function performCount(Builder $builder, array $options = [])
 	{
 		$query = [
-			'index' => is_null($builder->index) ? $builder->model->searchableAs() : $builder->index,
+			'index' => $builder->getIndex() ?? $builder->model->searchableAs(),
 			'type' => '_doc',
-			'body' => $this->parseBody($builder),
+			'body' => $builder->getBody(),
 			'ignore_throttled' => false,
-
 		];
+
 		return $this->elasticsearch->count($query);
 	}
 
@@ -216,17 +205,15 @@ class ElasticsearchEngine {
 		$query = [
 			'index' => is_null($builder->index) ? $builder->model->searchableAs() : $builder->index,
 			'type' => '_doc',
-			'body' => $this->parseBody($builder) + [
-				'sort' => $builder->orders,
-			],
+			'body' => $builder->getBodyWithOrders(),
 			'ignore_throttled' => false,
 
 		];
 
-		if (array_key_exists('size', $options))
+		if (isset($options['size']))
 			$query['size'] = $options['size'];
 
-		if (array_key_exists('from', $options))
+		if (isset($options['from']))
 			$query['from'] = $options['from'];
 
 		if ($builder->callback) {
@@ -238,6 +225,7 @@ class ElasticsearchEngine {
 				]
 			);
 		}
+
 		return $this->elasticsearch->search($query);
 	}
 

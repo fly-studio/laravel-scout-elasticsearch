@@ -117,7 +117,7 @@ User::search('should', function($elasticsearch, &$query){
 
     the field's name that you wanna to search.
 
- - $operator [string]:    term,=|terms,in|match,like|multi_match|range|prefix|common|wildcard|regexp|fuzzy|type|match_phrase|match_phrase_prefix|more_like_this|exists
+ - $operator [string]:    |[term],=|terms,in|match|multi_match|prefix|common|like,wildcard|regexp|fuzzy|type|match_phrase|match_phrase_prefix|more_like_this|exists|>,gt|>=.gte|<,lt|<=,lte|range|
 
     `https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html`
 
@@ -211,6 +211,15 @@ User::search()
     $query->where('gender', 'female')
     ->whereExists('gender');  // or where('gender' , 'exists', '');
 }, 'should');
+
+
+// or
+User::search()
+->where('name', 'admin')
+->whereOr(function($query) {
+    $query->where('gender', 'female')
+      ->whereExists('gender');  // or where('gender' , 'exists', '');
+})
 
 //JSON
 {
@@ -311,6 +320,8 @@ User::search()->whereNot(function($query){
 }
 ```
 
+### whereOr()
+
 ### whereIn(string $column, array $value)
 
 It equals to `where($column, 'in', $value)`
@@ -332,12 +343,12 @@ Search $value in all fileds.
 ```
 // JSON
 {
-	'match': {
-		'_all': {
-			'query': $value,
-			'fuzziness': 1,
-		}
-	}
+  'match': {
+    '_all': {
+      'query': $value,
+      'fuzziness': 1,
+    }
+  }
 }
 ```
 

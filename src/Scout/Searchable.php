@@ -20,23 +20,24 @@ trait Searchable {
 	 * Perform a search against the model's indexed data.
 	 * @example
 	 * search()->where(...)->get(['*'])
-	 * search('shold')->where(...)->get(['*'])
 	 * search()->where(...)->keys()
 	 * search()->where(...)->count()
 	 *
-	 * @note
-	 * querystring,bool,match_all is only one effective
-	 *
-	 *
-	 * @param string         $boolOccur    [must]|should|filter|must_not https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-bool-query.html
-	 * @param Closure        $callback
 	 * @return \Addons\Elasticsearch\Scout\Builder
 	 */
-	public static function search(string $boolOccur = 'must', callable $callback = null)
+	public static function search()
 	{
-		$builder = new Builder(new static, $callback);
-		$builder->setBool($boolOccur);
-		return $builder;
+		return Builder::createFromBool(new static());
+	}
+
+	public static function searchFromMatchAll($stringOrRaw)
+	{
+		return Builder::createFromMatchAll(new static(), $stringOrRaw);
+	}
+
+	public static function searchFromQueryString($stringOrRaw)
+	{
+		return Builder::createFromQueryString(new static(), $stringOrRaw);
 	}
 
 	/**
