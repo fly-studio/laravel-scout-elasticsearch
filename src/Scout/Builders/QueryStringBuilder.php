@@ -1,6 +1,8 @@
 <?php
 
-namespace Addons\Elasticsearch\Scout\Builder;
+namespace Addons\Elasticsearch\Scout\Builders;
+
+use Addons\Elasticsearch\Scout\Builder;
 
 class QueryStringBuilder extends Builder {
 
@@ -15,6 +17,18 @@ class QueryStringBuilder extends Builder {
 	{
 		$this->setModel($model);
 		$this->setQueryString(!is_array($stringOrRaw) ? ['query' => $stringOrRaw] : $stringOrRaw);
+	}
+
+	/**
+	 * Add a constraint to the search query.
+	 *
+	 * @param  string  $field
+	 * @param  mixed  $value
+	 * @return $this
+	 */
+	public function where($field, $value)
+	{
+		throw new BadMethodCallException('Can not use "where" in "query_string" mode');
 	}
 
 	protected function prepareBody()

@@ -2,9 +2,9 @@
 
 namespace Addons\Elasticsearch\Scout;
 
-use Closure;
 use BadMethodCallException;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 // see Laravel\Scout\Builder
@@ -13,27 +13,6 @@ abstract class Builder extends \Laravel\Scout\Builder {
 	use Concerns\OrderTrait;
 	use Concerns\QueryTrait;
 	use Concerns\AggregateTrait;
-
-	/**
-	 * The model instance.
-	 *
-	 * @var \Illuminate\Database\Eloquent\Model
-	 */
-	protected $model;
-
-	/**
-	 * Optional callback before search execution.
-	 *
-	 * @var string
-	 */
-	protected $callback;
-
-	/**
-	 * The custom index specified for the search.
-	 *
-	 * @var string
-	 */
-	protected $index = null;
 
 	/**
 	 * When sorting on a field, scores are not computed. By setting track_scores to true, scores will still be computed and tracked.
@@ -120,7 +99,7 @@ abstract class Builder extends \Laravel\Scout\Builder {
 	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-bool-query.html
 	 *
 	 * @param string       $boolOccur    [must]|should|filter|must_not
-	 * @param Collection   $wheres       the where's array
+	 * @param Collection   $bool         A bool stack
 	 */
 	public static function createFromBool(Model $model, string $boolOccur = 'must', Collection $bool = null)
 	{
@@ -149,15 +128,23 @@ abstract class Builder extends \Laravel\Scout\Builder {
 		return new Builders\QueryStringBuilder($model, $stringOrRaw);
 	}
 
+	public function callback(?callable $callback)
+	{
+		$this->callback = $callback;
+
+		return $this;
+	}
+
 	/**
-	 * Specify a custom index to perform this search on.
+	 * Include soft deleted records in the results.
 	 *
-	 * @param  string  $index
 	 * @return $this
 	 */
-	public function within($index)
+	public function softDelete(bool $softDelete)
 	{
-		$this->index = $index;
+		if ($softDelete) {
+			$this->wheres['__soft_deleted'] = 0;
+		}
 
 		return $this;
 	}
@@ -172,6 +159,43 @@ abstract class Builder extends \Laravel\Scout\Builder {
 	{
 		return $this->model->searchableUsing();
 	}
+
+	public function getBody()
+	{
+		$body = $this->prepareBody();
+
+		foreach([
+				'_source',
+				'aggs',
+				'track_scores',
+				'stored_fields',
+				'docvalue_fields',
+				'highlight',
+				'rescore',
+				'explain',
+				'version',
+				'indices_boost',
+				'min_score',
+				'search_after'
+			] as $var)
+		{
+			$value = $this->$var;
+
+			if (!is_null($value))
+				$body[$var] = $value;
+		}
+
+		return $body;
+	}
+
+	public function getBodyWithOrders()
+	{
+		return $this->getBody() + [
+			'sort' => $this->getOrders(),
+		];
+	}
+
+	abstract protected function prepareBody();
 
 	public function __call($method, $parameters)
 	{
@@ -194,42 +218,5 @@ abstract class Builder extends \Laravel\Scout\Builder {
 		throw new BadMethodCallException("Method [{$method}] does not exist.");
 
 	}
-
-	public function getBody()
-	{
-		$body = $builder->prepareBody();
-
-		foreach([
-				'_source',
-				'aggs',
-				'track_scores',
-				'stored_fields',
-				'docvalue_fields',
-				'highlight',
-				'rescore',
-				'explain',
-				'version',
-				'indices_boost',
-				'min_score',
-				'search_after'
-			] as $var)
-		{
-			$value = $builder->$var;
-
-			if (!is_null($value))
-				$body[$var] = $value;
-		}
-
-		return $body;
-	}
-
-	public function getBodyWithOrders()
-	{
-		return $this->getBody() + [
-			'sort' => $this->getOrders(),
-		];
-	}
-
-	abstract protected function prepareBody();
 
 }

@@ -1,10 +1,11 @@
 <?php
 
-namespace Addons\Elasticsearch\Scout\Builder;
+namespace Addons\Elasticsearch\Scout\Builders;
 
 use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Addons\Elasticsearch\Scout\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Support\Arrayable;
 
@@ -21,7 +22,7 @@ class BoolBuilder extends Builder {
 	/**
 	 * referencing like $this->bool['bool']['must']
 	 */
-	protected $boolAppendedPointer = null;
+	protected $bool_appended_pointer = null;
 
 	/**
 	 * the operator's alias
@@ -42,6 +43,12 @@ class BoolBuilder extends Builder {
 	public function __construct(Model $model, string $boolOccur = 'must', Collection $bool = null)
 	{
 		$this->setModel($model);
+
+		$this->initBool($boolOccur, $bool);
+	}
+
+	protected function initBool(string $boolOccur = 'must', Collection $bool = null)
+	{
 		if (is_null($bool))
 			$bool = new Collection();
 
@@ -114,21 +121,22 @@ class BoolBuilder extends Builder {
 	 *         ]
 	 *     ]
 	 * ];
-	 * User::search()->whereCustom($query)->get();
+	 * User::search()->whereRaw($query)->get();
+	 *
 	 * @example associative array
 	 * $query = [
 	 *     'term' => [
 	 *         'name' => 'admin'
 	 *     ]
 	 * ];
-	 * User::search()->whereCustom($query)->get();
+	 * User::search()->whereRaw($query)->get();
 	 *
 	 * @param  array  $esCondition
-	 * @return
+	 * @return $this
 	 */
-	public function whereCustom(array $esCondition)
+	public function whereRaw(array $esCondition)
 	{
-		$pointer = $this->boolAppendedPointer;
+		$pointer = $this->bool_appended_pointer;
 
 		if (!Arr::isAssoc($column))
 			$pointer->merge($column);
@@ -139,18 +147,29 @@ class BoolBuilder extends Builder {
 	}
 
 	/**
-	 * User::search()->where('should', function($query) {
-	 * 	$query->where(1)->where(2);
+	 * like above, but esCondition set in a "should"
+	 * @param  array  $esCondition
+	 * @return $this
+	 */
+	public function orWhereRaw(array $esCondition) {
+		return $this->whereClosure('should', function($builder) use ($esCondition) {
+			$builder->whereRaw($esCondition);
+		});
+	}
+
+	/**
+	 * User::search()->where('should', function($builder) {
+	 * 	$builder->where(1)->where(2);
 	 * });
 	 *
 	 * @param  string  $boolOccur must|must_not|should
 	 * @param  Closure $callable
-	 * @return
+	 * @return $this
 	 */
 	public function whereClosure(?string $boolOccur, Closure $callable)
 	{
-		$this->boolAppendedPointer[] = new Collection();
-		$bool = $this->boolAppendedPointer->last();
+		$this->bool_appended_pointer[] = new Collection();
+		$bool = $this->bool_appended_pointer->last();
 
 		$newBuilder = static::createFromBool($this->getModel(), $boolOccur, $bool);
 
@@ -164,7 +183,7 @@ class BoolBuilder extends Builder {
 	 *
 	 * @param  array  $fileds
 	 * @param  mixed $value
-	 * @return
+	 * @return $this
 	 */
 	public function whereMultiMatch(array $fileds, $value)
 	{
@@ -175,8 +194,8 @@ class BoolBuilder extends Builder {
 	 * like SQL's WHERE 1 or (`f` = 'v' and `f2` = 'v2')
 	 *
 	 * @example User::search()->whereOr('gender', 'famale')->get();
-	 * @example User::search()->whereOr(function($query) {
-	 *          $query->where(1)->where(2); // where not (1 and 2)
+	 * @example User::search()->whereOr(function($builder) {
+	 *          $builder->where(1)->where(2); // where not (1 and 2)
 	 * })->get();
 	 *
 	 * @param  string|array $column   see where's column
@@ -200,8 +219,8 @@ class BoolBuilder extends Builder {
 	 * like SQL's WHERE `f` != 'v'
 	 *
 	 * @example User::search()->whereNot('gender', 'famale')->get();
-	 * @example User::search()->whereNot(function($query) {
-	 *          $query->where(1)->where(2); // where not (1 and 2)
+	 * @example User::search()->whereNot(function($builder) {
+	 *          $builder->where(1)->where(2); // where not (1 and 2)
 	 * })->get();
 	 *
 	 * @param  string|array $column   see where's column
@@ -222,20 +241,40 @@ class BoolBuilder extends Builder {
 	}
 
 	/**
-	 * like SQL: field is null
-	 * @example User::search('should')->whereExists('gender')->where('gender', 'male')->get();
-	 * SELECT * FROM (gender is null OR gender = 'male')
+	 * like SQL: WHERE field is not null
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-exists-query.html
 	 *
-	 * @param  [type] $column [description]
-	 * @return [type]         [description]
+	 * @example User::search('should')->whereExists('gender')->get(); = whereNotNull('gender')
+	 * SELECT * FROM WHERE gender is not null
+	 *
+	 * @param  string $column
+	 * @return $this
 	 */
 	public function whereExists(string $column)
 	{
 		return $this->where($column, 'exists', true);
 	}
 
-	public function whereIsNull(string $column) {
+	/**
+	 * Same as above
+	 *
+	 * @param  string $column
+	 * @return $this
+	 */
+	public function whereNotNull(string $column) {
 		return $this->whereExists($column);
+	}
+
+	/**
+	 * like SQL: WHERE field is null
+	 *
+	 * @param  string $column
+	 * @return $this
+	 */
+	public function whereNull(string $column) {
+		return $this->whereNot(function($builder) use ($column) {
+			$builder->whereExists($column);
+		});
 	}
 
 	/**
@@ -244,7 +283,7 @@ class BoolBuilder extends Builder {
 	 *
 	 * @param  string           $column the field of elastic
 	 * @param  array|Collection $values data
-	 * @return Builder                  this
+	 * @return $this
 	 */
 	public function whereIn($column, $values)
 	{
@@ -254,9 +293,9 @@ class BoolBuilder extends Builder {
 	/**
 	 * like SQL's WHERE `f` not in [$val]
 	 *
-	 * @param  string $column [description]
-	 * @param  array $values [description]
-	 * @return [type]         [description]
+	 * @param  string $column
+	 * @param  array $values
+	 * @return $this
 	 */
 	public function whereNotIn(string $column, $values)
 	{
@@ -271,7 +310,7 @@ class BoolBuilder extends Builder {
 	 */
 	public function whereAll($value)
 	{
-		$this->boolAppendedPointer[] = [
+		$this->bool_appended_pointer[] = [
 			'match' => [
 				'_all' => [
 					'query' => $value,
@@ -292,7 +331,7 @@ class BoolBuilder extends Builder {
 			$operator = is_array($column) ? 'multi_match' : 'term';
 		}
 
-		$pointer = $this->boolAppendedPointer;
+		$pointer = $this->bool_appended_pointer;
 
 		$operator = strtolower($operator);
 		isset($this->aliasOperators[$operator]) && $operator = $this->aliasOperators[$operator];
@@ -398,6 +437,16 @@ class BoolBuilder extends Builder {
 
 	protected function prepareBody()
 	{
+		// table contain deleted_at
+		if (isset($this->wheres['__soft_deleted']))
+		{
+			//only trashed: deleted_at is not null
+			if ($this->wheres['__soft_deleted'] === 1)
+				$this->whereNotNull($this->getModel()->getDeletedAtColumn());
+			else  //All without trashed: deleted_at is null
+				$this->whereNull($this->getModel()->getDeletedAtColumn());
+		} // all with trashed
+
 		return [
 			'query' => $this->bool->toArray(),
 		];

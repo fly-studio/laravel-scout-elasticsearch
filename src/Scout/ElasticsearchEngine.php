@@ -50,7 +50,7 @@ class ElasticsearchEngine {
 			$body->push([
 				'index' => [
 					'_index' => $model->searchableAs(),
-					'_type' => '_doc',
+					'_type' => $model->searchableType(),
 					'_id' => $model->getKey(),
 				],
 			]);
@@ -78,7 +78,7 @@ class ElasticsearchEngine {
 			$body->push([
 				'delete' => [
 					'_index' => $model->searchableAs(),
-					'_type' => '_doc',
+					'_type' => $model->searchableType(),
 					'_id'  => $model->getKey(),
 				],
 			]);
@@ -184,7 +184,7 @@ class ElasticsearchEngine {
 	{
 		$query = [
 			'index' => $builder->getIndex() ?? $builder->model->searchableAs(),
-			'type' => '_doc',
+			'type' => $builder->model->searchableType(),
 			'body' => $builder->getBody(),
 			'ignore_throttled' => false,
 		];
@@ -204,7 +204,7 @@ class ElasticsearchEngine {
 	{
 		$query = [
 			'index' => is_null($builder->index) ? $builder->model->searchableAs() : $builder->index,
-			'type' => '_doc',
+			'type' => $builder->model->searchableType(),
 			'body' => $builder->getBodyWithOrders(),
 			'ignore_throttled' => false,
 
@@ -216,9 +216,9 @@ class ElasticsearchEngine {
 		if (isset($options['from']))
 			$query['from'] = $options['from'];
 
-		if ($builder->callback) {
+		if (is_callable($builder->getCallback())) {
 			call_user_func_array(
-				$builder->callback,
+				$builder->getCallback(),
 				[
 					$this->elasticsearch,
 					&$query,

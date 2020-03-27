@@ -20,24 +20,33 @@ trait Searchable {
 	 * Perform a search against the model's indexed data.
 	 * @example
 	 * search()->where(...)->get(['*'])
-	 * search()->where(...)->keys()
-	 * search()->where(...)->count()
+	 * search("should")->where(...)->keys()
+	 * search("must_not")->where(...)->count()
 	 *
 	 * @return \Addons\Elasticsearch\Scout\Builder
 	 */
-	public static function search()
+	public static function search(string $boolOccur = 'must', callable $callback = null)
 	{
-		return Builder::createFromBool(new static());
+		return Builder::createFromBool(new static(), $boolOccur)
+			->callback($callback)
+			->softDelete(static::usesSoftDelete() && config('scout.soft_delete', false))
+			;
 	}
 
-	public static function searchFromMatchAll($stringOrRaw)
+	public static function searchFromMatchAll($stringOrRaw, callable $callback = null)
 	{
-		return Builder::createFromMatchAll(new static(), $stringOrRaw);
+		return Builder::createFromMatchAll(new static(), $stringOrRaw)
+			->callback($callback)
+			->softDelete(static::usesSoftDelete() && config('scout.soft_delete', false))
+			;
 	}
 
-	public static function searchFromQueryString($stringOrRaw)
+	public static function searchFromQueryString($stringOrRaw, callable $callback = null)
 	{
-		return Builder::createFromQueryString(new static(), $stringOrRaw);
+		return Builder::createFromQueryString(new static(), $stringOrRaw)
+			->callback($callback)
+			->softDelete(static::usesSoftDelete() && config('scout.soft_delete', false))
+			;
 	}
 
 	/**
@@ -135,6 +144,16 @@ trait Searchable {
 		}
 
 		return $models->first()->searchableUsing()->delete($models, $refresh);
+	}
+
+	/**
+	 * Get the type name for the model.
+	 *
+	 * @return string
+	 */
+	public function searchableType()
+	{
+		return '_doc';
 	}
 
 	public function searchableWith()
